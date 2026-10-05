@@ -8,14 +8,17 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
-// newslearn.apiBaseUrl in local.properties points the app at your backend.
+// newslearn.apiBaseUrl in local.properties (or the NEWSLEARN_API_BASE_URL environment
+// variable, used by CI) points the app at your backend.
 // The default reaches a backend running on the computer that hosts the emulator.
 val localProperties = Properties().apply {
     val file = rootProject.file("local.properties")
     if (file.exists()) file.inputStream().use { load(it) }
 }
 val apiBaseUrl: String =
-    localProperties.getProperty("newslearn.apiBaseUrl") ?: "http://10.0.2.2:8000/"
+    localProperties.getProperty("newslearn.apiBaseUrl")
+        ?: System.getenv("NEWSLEARN_API_BASE_URL")?.takeIf { it.isNotBlank() }
+        ?: "http://10.0.2.2:8000/"
 
 android {
     namespace = "com.newslearn.bd"

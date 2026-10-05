@@ -50,6 +50,9 @@ jobs:
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v6
       - run: ./gradlew testDebugUnitTest assembleDebug
+        env:
+          # Repository variable; without it the APK targets a backend on the emulator's host.
+          NEWSLEARN_API_BASE_URL: ${{ vars.API_BASE_URL }}
       - uses: actions/upload-artifact@v7
         with:
           name: app-debug
