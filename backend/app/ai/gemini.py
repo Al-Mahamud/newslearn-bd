@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from app.ai.base import (
     AIConfigError,
     AIError,
+    AIRateLimited,
     AIRefused,
     AIUsageInfo,
     ArticleEnrichment,
@@ -36,7 +37,8 @@ _BLOCKED = {
     types.FinishReason.PROHIBITED_CONTENT,
     types.FinishReason.SPII,
 }
-_RETRY_STATUS = [408, 429, 500, 502, 503, 504]
+# 429 is not retried here: hammering a spent quota only delays its recovery.
+_RETRY_STATUS = [408, 500, 502, 503, 504]
 
 
 class GeminiProvider:
@@ -81,7 +83,9 @@ class GeminiProvider:
             )
         except errors.ClientError as e:
             if e.code == 429:
-                raise AIError(f"rate limited: {e.message}") from e
+                raise AIRateLimited(
+                    "Gemini quota reached: " + (e.message or "").split("\n")[0]
+                ) from e
             if e.code in (401, 403, 404) or "API key" in (e.message or ""):
                 # A bad key or an unknown/retired model: nothing about the article is wrong.
                 raise AIConfigError(

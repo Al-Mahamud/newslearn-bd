@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, Query, status
 from sqlalchemy import select
 
 from app.ai import budget_exhausted, get_provider, record_usage, user_calls_today
-from app.ai.base import AIError, AIRefused
+from app.ai.base import AIError, AIRateLimited, AIRefused
 from app.api.articles import get_ready_article
 from app.config import get_settings
 from app.deps import CurrentUser, DbSession
@@ -42,6 +42,10 @@ def _check_ai_allowed(db, user, purpose: str, limit: int) -> None:
 def _ai_failure(error: AIError) -> HTTPException:
     if isinstance(error, AIRefused):
         return HTTPException(422, "This text could not be explained")
+    if isinstance(error, AIRateLimited):
+        return HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE, "The AI is busy. Try again in a minute."
+        )
     return HTTPException(
         status.HTTP_502_BAD_GATEWAY, "The AI service is unavailable. Please try again."
     )

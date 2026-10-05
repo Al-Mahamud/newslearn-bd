@@ -1,13 +1,21 @@
 """Turns collected articles into study material with one model call per article."""
 
 import logging
+import time
 from dataclasses import dataclass
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.ai import budget_exhausted, get_provider, record_usage
-from app.ai.base import DIFFICULTY_SCORE, AIConfigError, AIError, AIRefused, ArticleEnrichment
+from app.ai.base import (
+    DIFFICULTY_SCORE,
+    AIConfigError,
+    AIError,
+    AIRateLimited,
+    AIRefused,
+    ArticleEnrichment,
+)
 from app.ai.prompts import PROMPT_VERSION
 from app.config import get_settings
 from app.models import (
@@ -24,7 +32,7 @@ from app.services.textutil import truncate
 
 log = logging.getLogger(__name__)
 
-MAX_ATTEMPTS = 3
+MAX_ATTEMPTS = 5
 MIN_TEXT_CHARS = 80
 # Below this a feed item is only a teaser; fetch the page if the source allows it.
 FULL_TEXT_WANTED_BELOW = 600
@@ -39,6 +47,7 @@ class ProcessResult:
     failed: int = 0
     skipped: int = 0
     stopped_for_budget: bool = False
+    stopped_for_rate_limit: bool = False
 
 
 def _article_text(article: Article) -> str:
@@ -150,7 +159,7 @@ def process_article(db: Session, article: Article) -> str:
     except AIRefused as e:
         article.status, article.error = "skipped", str(e)
         return article.status
-    except AIConfigError:
+    except (AIConfigError, AIRateLimited):
         # Not this article's fault: give the attempt back and stop the whole run.
         article.attempts -= 1
         raise
@@ -169,6 +178,20 @@ def process_article(db: Session, article: Article) -> str:
     return article.status
 
 
+_last_call = 0.0
+
+
+def _pace() -> None:
+    """Space model calls out so a run stays under the provider's per-minute limit."""
+    global _last_call
+    per_minute = get_settings().ai_requests_per_minute
+    if per_minute > 0:
+        wait = 60 / per_minute - (time.monotonic() - _last_call)
+        if _last_call and wait > 0:
+            time.sleep(wait)
+    _last_call = time.monotonic()
+
+
 def process_pending(db: Session, limit: int | None = None) -> ProcessResult:
     limit = limit or get_settings().ai_max_articles_per_run
     result = ProcessResult()
@@ -185,7 +208,14 @@ def process_pending(db: Session, limit: int | None = None) -> ProcessResult:
             log.warning("daily AI budget reached; processing resumes tomorrow")
             break
         article = db.get(Article, article_id)
-        status = process_article(db, article)
+        _pace()
+        try:
+            status = process_article(db, article)
+        except AIRateLimited as e:
+            db.commit()
+            result.stopped_for_rate_limit = True
+            log.warning("%s; the rest wait for the next run", e)
+            break
         db.commit()
         if status == "ready":
             result.ready += 1

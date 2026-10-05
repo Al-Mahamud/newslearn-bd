@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from app.ai.base import (
     AIConfigError,
     AIError,
+    AIRateLimited,
     AIRefused,
     AIUsageInfo,
     ArticleEnrichment,
@@ -79,7 +80,7 @@ class ClaudeProvider:
                 f"Claude rejected the key or model {self.model!r}: {e.message}"
             ) from e
         except anthropic.RateLimitError as e:
-            raise AIError(f"rate limited: {e.message}") from e
+            raise AIRateLimited(f"Claude rate limit reached: {e.message}") from e
         except anthropic.APIStatusError as e:
             raise AIError(f"API error {e.status_code}: {e.message}") from e
         except anthropic.APIConnectionError as e:

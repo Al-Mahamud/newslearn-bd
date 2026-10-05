@@ -80,6 +80,10 @@ class AIError(Exception):
     """The provider call failed; worth retrying later."""
 
 
+class AIRateLimited(AIError):
+    """The provider's quota is used up for now; wait before sending anything else."""
+
+
 class AIConfigError(AIError):
     """The key or model name is wrong; every call will fail until the settings change."""
 

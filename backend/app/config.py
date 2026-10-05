@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     ai_effort: str = "low"
     ai_daily_budget_usd: float = 1.0
     ai_max_articles_per_run: int = 15
+    # Article-processing calls are spaced to stay under this. Gemini's free tier allows 5
+    # a minute; raise it on a paid plan, or set 0 for no pacing.
+    ai_requests_per_minute: int = 4
 
     scheduler_enabled: bool = True
     collect_interval_minutes: int = 30

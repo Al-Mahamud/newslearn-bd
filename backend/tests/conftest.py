@@ -5,6 +5,7 @@ os.environ.update(
     DATABASE_URL=os.environ.get("TEST_DATABASE_URL") or "sqlite:///:memory:",
     SCHEDULER_ENABLED="false",
     AI_PROVIDER="mock",
+    AI_REQUESTS_PER_MINUTE="0",
     ENVIRONMENT="test",
 )
 

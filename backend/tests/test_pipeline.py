@@ -47,7 +47,7 @@ class Failing(MockProvider):
 def test_provider_errors_are_retried_then_marked_failed(db, make_article):
     ai.set_provider(Failing(AIError("boom")))
     article = make_article(process=False)
-    for expected in ("pending", "pending", "failed"):
+    for expected in ["pending"] * (pipeline.MAX_ATTEMPTS - 1) + ["failed"]:
         pipeline.process_pending(db)
         db.refresh(article)
         assert article.status == expected
@@ -120,3 +120,35 @@ def test_cleanup_removes_old_articles_but_keeps_saved_ones(db, make_article, cli
 
     assert db.get(Article, old_id) is None
     assert db.get(Article, kept_id) is not None and db.get(Article, recent_id) is not None
+
+
+def test_a_spent_quota_ends_the_run_and_costs_no_attempts(db, make_article):
+    from app.ai.base import AIRateLimited
+
+    ai.set_provider(Failing(AIRateLimited("quota reached")))
+    articles = [make_article(process=False) for _ in range(3)]
+    result = pipeline.process_pending(db)
+    assert result.stopped_for_rate_limit and (result.ready, result.failed) == (0, 0)
+    for article in articles:
+        db.refresh(article)
+        assert (article.status, article.attempts) == ("pending", 0)
+
+
+def test_calls_are_paced_to_the_per_minute_limit(db, make_article, monkeypatch):
+    from app.config import get_settings
+
+    clock = {"now": 1000.0}
+    sleeps: list[float] = []
+
+    def sleep(seconds):
+        sleeps.append(seconds)
+        clock["now"] += seconds
+
+    monkeypatch.setattr(pipeline.time, "monotonic", lambda: clock["now"])
+    monkeypatch.setattr(pipeline.time, "sleep", sleep)
+    monkeypatch.setattr(pipeline, "_last_call", 0.0)
+    monkeypatch.setattr(get_settings(), "ai_requests_per_minute", 4)
+    for _ in range(3):
+        make_article(process=False)
+    assert pipeline.process_pending(db).ready == 3
+    assert sleeps == [15.0, 15.0]  # no wait before the first call

@@ -63,6 +63,9 @@ jobs:
       - name: Process
         if: steps.config.outputs.ready == 'true'
         run: python -m app.cli process --limit 20
+      - name: Show a sample
+        if: steps.config.outputs.ready == 'true'
+        run: python -m app.cli sample
       - name: Daily cleanup
         if: steps.config.outputs.ready == 'true' && github.event.schedule == '5 * * * *'
         run: |
