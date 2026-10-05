@@ -44,11 +44,19 @@ GitHub Actions (hourly)  ──collect + AI──►  PostgreSQL (Neon)  ◄─�
   limit and could run more often (edit the `cron` line).
 - **Schedule can pause.** GitHub disables scheduled workflows after 60 days with no
   repository activity; re-enable it from the Actions tab.
+- **Gemini's free tier is small.** Measured on 5 October 2026 with `gemini-3.8-flash`:
+  5 requests a minute and 20 a day. That is about 20 analysed articles a day, shared with
+  sentence explanations and tutor questions. The pipeline stops cleanly when the quota is
+  spent and carries on the next day; nothing is lost. For the full daily news (roughly
+  60-150 articles) enable billing on the Gemini key, then raise `AI_REQUESTS_PER_MINUTE`.
+  Your current limits are shown at https://ai.dev/rate-limit.
+- **Dhaka Tribune refuses GitHub's servers** (HTTP 403), so that source only works when
+  the collector runs elsewhere. The other five feeds work.
 - **AI cost** is capped per day by `AI_DAILY_BUDGET_USD` (default $1.00). Change it under
   *Settings → Secrets and variables → Actions → Variables*.
 
 ## Not yet verified
 
-None of this has been deployed. The workflow files and blueprint are valid YAML and the
-commands in them are the ones tested locally, but the first run on GitHub, Neon and Render
-may need small corrections. The Docker image has not been built.
+The GitHub Actions pipeline and the Neon database are running: tables created, five feeds
+collected, and articles analysed by Gemini. The Render deployment has not been tried yet,
+and the Docker image it uses has never been built, so expect small corrections there.
