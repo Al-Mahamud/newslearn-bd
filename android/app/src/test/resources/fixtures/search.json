@@ -1,0 +1,62 @@
+{
+ "articles": [
+  {
+   "id": 1,
+   "title": "Inflation eases, report 0",
+   "source": "Test Times",
+   "url": "https://example.com/0",
+   "image_url": null,
+   "published_at": "2026-10-05T15:54:01.053838Z",
+   "category": "economy",
+   "summary": "[mock] Bangladesh Bank said inflation fell to 8.5% in September as sluggish credit growth limited spending. The government expects remittance inflows to strengthen reserves.",
+   "exam_importance": 70,
+   "exam_important": true,
+   "word_count": 5,
+   "saved": false,
+   "read": false
+  },
+  {
+   "id": 2,
+   "title": "Inflation eases, report 1",
+   "source": "Test Times",
+   "url": "https://example.com/1",
+   "image_url": "https://example.com/i.jpg",
+   "published_at": "2026-10-05T15:53:01.070927Z",
+   "category": "economy",
+   "summary": "[mock] Bangladesh Bank said inflation fell to 8.5% in September as sluggish credit growth limited spending. The government expects remittance inflows to strengthen reserves.",
+   "exam_importance": 70,
+   "exam_important": true,
+   "word_count": 5,
+   "saved": false,
+   "read": false
+  },
+  {
+   "id": 3,
+   "title": "Inflation eases, report 2",
+   "source": "Test Times",
+   "url": "https://example.com/2",
+   "image_url": "https://example.com/i.jpg",
+   "published_at": "2026-10-05T15:52:01.076077Z",
+   "category": "economy",
+   "summary": "[mock] Bangladesh Bank said inflation fell to 8.5% in September as sluggish credit growth limited spending. The government expects remittance inflows to strengthen reserves.",
+   "exam_importance": 70,
+   "exam_important": true,
+   "word_count": 5,
+   "saved": false,
+   "read": false
+  }
+ ],
+ "words": [
+  {
+   "id": 1,
+   "word": "inflation",
+   "part_of_speech": "noun",
+   "meaning_en": "[mock] meaning of 'inflation'",
+   "meaning_bn": "[mock] 'inflation' শব্দের অর্থ",
+   "example_sentence": "[mock] An example sentence using inflation.",
+   "difficulty": 2,
+   "context_sentence": "",
+   "saved": true
+  }
+ ]
+}

@@ -1,0 +1,90 @@
+{
+ "id": 1,
+ "title": "Inflation eases, report 0",
+ "source": "Test Times",
+ "url": "https://example.com/0",
+ "image_url": null,
+ "published_at": "2026-10-05T15:54:01.053838Z",
+ "category": "economy",
+ "summary": "[mock] Bangladesh Bank said inflation fell to 8.5% in September as sluggish credit growth limited spending. The government expects remittance inflows to strengthen reserves.",
+ "exam_importance": 70,
+ "exam_important": true,
+ "word_count": 5,
+ "saved": false,
+ "read": false,
+ "author": null,
+ "easy_summary": "[mock] In simple words: Bangladesh Bank said inflation fell to 8.5% in September as sluggish credit growth limited spending.",
+ "bangla_summary": "[mock] বাংলা সারাংশ: Inflation eases, report 0",
+ "exam_reason": "[mock] Placeholder relevance note.",
+ "vocabulary": [
+  {
+   "id": 1,
+   "word": "inflation",
+   "part_of_speech": "noun",
+   "meaning_en": "[mock] meaning of 'inflation'",
+   "meaning_bn": "[mock] 'inflation' শব্দের অর্থ",
+   "example_sentence": "[mock] An example sentence using inflation.",
+   "difficulty": 2,
+   "context_sentence": "Bangladesh Bank said inflation fell to 8.5% in September as sluggish credit growth limited spending.",
+   "saved": false
+  },
+  {
+   "id": 2,
+   "word": "government",
+   "part_of_speech": "noun",
+   "meaning_en": "[mock] meaning of 'government'",
+   "meaning_bn": "[mock] 'government' শব্দের অর্থ",
+   "example_sentence": "[mock] An example sentence using government.",
+   "difficulty": 2,
+   "context_sentence": "The government expects remittance inflows to strengthen reserves.",
+   "saved": false
+  },
+  {
+   "id": 3,
+   "word": "remittance",
+   "part_of_speech": "noun",
+   "meaning_en": "[mock] meaning of 'remittance'",
+   "meaning_bn": "[mock] 'remittance' শব্দের অর্থ",
+   "example_sentence": "[mock] An example sentence using remittance.",
+   "difficulty": 2,
+   "context_sentence": "The government expects remittance inflows to strengthen reserves.",
+   "saved": false
+  },
+  {
+   "id": 4,
+   "word": "strengthen",
+   "part_of_speech": "noun",
+   "meaning_en": "[mock] meaning of 'strengthen'",
+   "meaning_bn": "[mock] 'strengthen' শব্দের অর্থ",
+   "example_sentence": "[mock] An example sentence using strengthen.",
+   "difficulty": 2,
+   "context_sentence": "The government expects remittance inflows to strengthen reserves.",
+   "saved": false
+  },
+  {
+   "id": 5,
+   "word": "austerity",
+   "part_of_speech": "noun",
+   "meaning_en": "[mock] meaning of 'austerity'",
+   "meaning_bn": "[mock] 'austerity' শব্দের অর্থ",
+   "example_sentence": "[mock] An example sentence using austerity.",
+   "difficulty": 2,
+   "context_sentence": "Economists warned that austerity measures could slow infrastructure development.",
+   "saved": false
+  }
+ ],
+ "facts": [
+  {
+   "kind": "number",
+   "text": "8.5%",
+   "detail": "[mock] figure mentioned in the article"
+  },
+  {
+   "kind": "organization",
+   "text": "Test Times",
+   "detail": "Publisher"
+  }
+ ],
+ "question_count": 1,
+ "ai_generated": true
+}

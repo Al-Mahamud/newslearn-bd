@@ -1,0 +1,57 @@
+{
+ "attempt_id": 1,
+ "quiz_id": 1,
+ "quiz_title": "Daily quiz — 05 Oct 2026",
+ "score": 1,
+ "total": 3,
+ "percent": 33,
+ "duration_seconds": 5,
+ "submitted_at": "2026-10-05T15:54:01.226601Z",
+ "review": [
+  {
+   "question_id": 1,
+   "text": "[mock] Which publisher reported: \"Inflation eases, report 0\"?",
+   "options": [
+    "Test Times",
+    "Example Times",
+    "Sample Herald",
+    "Placeholder Post"
+   ],
+   "selected_index": 0,
+   "correct_index": 0,
+   "correct": true,
+   "explanation": "The article was published by Test Times.",
+   "article_id": 1
+  },
+  {
+   "question_id": 2,
+   "text": "[mock] Which publisher reported: \"Inflation eases, report 1\"?",
+   "options": [
+    "Test Times",
+    "Example Times",
+    "Sample Herald",
+    "Placeholder Post"
+   ],
+   "selected_index": null,
+   "correct_index": 0,
+   "correct": false,
+   "explanation": "The article was published by Test Times.",
+   "article_id": 2
+  },
+  {
+   "question_id": 3,
+   "text": "[mock] Which publisher reported: \"Inflation eases, report 2\"?",
+   "options": [
+    "Test Times",
+    "Example Times",
+    "Sample Herald",
+    "Placeholder Post"
+   ],
+   "selected_index": null,
+   "correct_index": 0,
+   "correct": false,
+   "explanation": "The article was published by Test Times.",
+   "article_id": 3
+  }
+ ]
+}

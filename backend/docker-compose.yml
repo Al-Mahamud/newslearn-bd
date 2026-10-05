@@ -1,0 +1,33 @@
+# docker compose up --build
+# Reads JWT_SECRET, AI_PROVIDER, ANTHROPIC_API_KEY, ... from .env (see .env.example).
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: newslearn
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-newslearn}
+      POSTGRES_DB: newslearn
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U newslearn"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql+psycopg://newslearn:${POSTGRES_PASSWORD:-newslearn}@db:5432/newslearn
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+volumes:
+  pgdata:

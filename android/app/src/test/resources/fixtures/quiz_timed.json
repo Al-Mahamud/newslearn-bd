@@ -1,0 +1,46 @@
+{
+ "id": 2,
+ "kind": "mock",
+ "title": "Mock exam",
+ "category": null,
+ "for_date": null,
+ "time_limit_seconds": 135,
+ "questions": [
+  {
+   "id": 3,
+   "text": "[mock] Which publisher reported: \"Inflation eases, report 2\"?",
+   "options": [
+    "Test Times",
+    "Example Times",
+    "Sample Herald",
+    "Placeholder Post"
+   ],
+   "category": "economy",
+   "article_id": 3
+  },
+  {
+   "id": 1,
+   "text": "[mock] Which publisher reported: \"Inflation eases, report 0\"?",
+   "options": [
+    "Test Times",
+    "Example Times",
+    "Sample Herald",
+    "Placeholder Post"
+   ],
+   "category": "economy",
+   "article_id": 1
+  },
+  {
+   "id": 2,
+   "text": "[mock] Which publisher reported: \"Inflation eases, report 1\"?",
+   "options": [
+    "Test Times",
+    "Example Times",
+    "Sample Herald",
+    "Placeholder Post"
+   ],
+   "category": "economy",
+   "article_id": 2
+  }
+ ]
+}

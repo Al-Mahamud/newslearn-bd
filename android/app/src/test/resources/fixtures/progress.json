@@ -1,0 +1,58 @@
+{
+ "streak_days": 1,
+ "articles_read": 1,
+ "articles_read_today": 1,
+ "saved_articles": 0,
+ "words_saved": 1,
+ "words_learned": 0,
+ "words_due": 1,
+ "quizzes_taken": 1,
+ "average_score_percent": 33,
+ "topics": [
+  {
+   "category": "economy",
+   "label": "Economy",
+   "answered": 3,
+   "correct": 1,
+   "percent": 33
+  }
+ ],
+ "weakest_topic": null,
+ "last_7_days": [
+  {
+   "day": "2026-09-29",
+   "articles_read": 0,
+   "quizzes_taken": 0
+  },
+  {
+   "day": "2026-09-30",
+   "articles_read": 0,
+   "quizzes_taken": 0
+  },
+  {
+   "day": "2026-10-01",
+   "articles_read": 0,
+   "quizzes_taken": 0
+  },
+  {
+   "day": "2026-10-02",
+   "articles_read": 0,
+   "quizzes_taken": 0
+  },
+  {
+   "day": "2026-10-03",
+   "articles_read": 0,
+   "quizzes_taken": 0
+  },
+  {
+   "day": "2026-10-04",
+   "articles_read": 0,
+   "quizzes_taken": 0
+  },
+  {
+   "day": "2026-10-05",
+   "articles_read": 1,
+   "quizzes_taken": 1
+  }
+ ]
+}

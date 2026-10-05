@@ -1,0 +1,46 @@
+{
+ "id": 1,
+ "kind": "daily",
+ "title": "Daily quiz — 05 Oct 2026",
+ "category": null,
+ "for_date": "2026-10-05",
+ "time_limit_seconds": null,
+ "questions": [
+  {
+   "id": 1,
+   "text": "[mock] Which publisher reported: \"Inflation eases, report 0\"?",
+   "options": [
+    "Test Times",
+    "Example Times",
+    "Sample Herald",
+    "Placeholder Post"
+   ],
+   "category": "economy",
+   "article_id": 1
+  },
+  {
+   "id": 2,
+   "text": "[mock] Which publisher reported: \"Inflation eases, report 1\"?",
+   "options": [
+    "Test Times",
+    "Example Times",
+    "Sample Herald",
+    "Placeholder Post"
+   ],
+   "category": "economy",
+   "article_id": 2
+  },
+  {
+   "id": 3,
+   "text": "[mock] Which publisher reported: \"Inflation eases, report 2\"?",
+   "options": [
+    "Test Times",
+    "Example Times",
+    "Sample Herald",
+    "Placeholder Post"
+   ],
+   "category": "economy",
+   "article_id": 3
+  }
+ ]
+}

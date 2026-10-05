@@ -1,0 +1,90 @@
+{
+ "period": "weekly",
+ "start": "2026-10-03",
+ "end": "2026-10-09",
+ "article_count": 3,
+ "groups": [
+  {
+   "category": "economy",
+   "label": "Economy",
+   "articles": [
+    {
+     "id": 1,
+     "title": "Inflation eases, report 0",
+     "source": "Test Times",
+     "summary": "[mock] Bangladesh Bank said inflation fell to 8.5% in September as sluggish credit growth limited spending. The government expects remittance inflows to strengthen reserves.",
+     "exam_importance": 70,
+     "exam_reason": "[mock] Placeholder relevance note.",
+     "facts": [
+      {
+       "kind": "number",
+       "text": "8.5%",
+       "detail": "[mock] figure mentioned in the article"
+      },
+      {
+       "kind": "organization",
+       "text": "Test Times",
+       "detail": "Publisher"
+      }
+     ]
+    },
+    {
+     "id": 2,
+     "title": "Inflation eases, report 1",
+     "source": "Test Times",
+     "summary": "[mock] Bangladesh Bank said inflation fell to 8.5% in September as sluggish credit growth limited spending. The government expects remittance inflows to strengthen reserves.",
+     "exam_importance": 70,
+     "exam_reason": "[mock] Placeholder relevance note.",
+     "facts": [
+      {
+       "kind": "number",
+       "text": "8.5%",
+       "detail": "[mock] figure mentioned in the article"
+      },
+      {
+       "kind": "organization",
+       "text": "Test Times",
+       "detail": "Publisher"
+      }
+     ]
+    },
+    {
+     "id": 3,
+     "title": "Inflation eases, report 2",
+     "source": "Test Times",
+     "summary": "[mock] Bangladesh Bank said inflation fell to 8.5% in September as sluggish credit growth limited spending. The government expects remittance inflows to strengthen reserves.",
+     "exam_importance": 70,
+     "exam_reason": "[mock] Placeholder relevance note.",
+     "facts": [
+      {
+       "kind": "number",
+       "text": "8.5%",
+       "detail": "[mock] figure mentioned in the article"
+      },
+      {
+       "kind": "organization",
+       "text": "Test Times",
+       "detail": "Publisher"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "revision": {
+  "number": [
+   {
+    "kind": "number",
+    "text": "8.5%",
+    "detail": "[mock] figure mentioned in the article"
+   }
+  ],
+  "organization": [
+   {
+    "kind": "organization",
+    "text": "Test Times",
+    "detail": "Publisher"
+   }
+  ]
+ }
+}

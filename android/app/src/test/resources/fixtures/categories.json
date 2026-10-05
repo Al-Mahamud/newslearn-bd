@@ -1,0 +1,30 @@
+[
+ {
+  "slug": "bangladesh",
+  "label": "Bangladesh"
+ },
+ {
+  "slug": "international",
+  "label": "International"
+ },
+ {
+  "slug": "economy",
+  "label": "Economy"
+ },
+ {
+  "slug": "science_technology",
+  "label": "Science & Technology"
+ },
+ {
+  "slug": "environment",
+  "label": "Environment & Climate"
+ },
+ {
+  "slug": "sports",
+  "label": "Sports"
+ },
+ {
+  "slug": "other",
+  "label": "Other"
+ }
+]

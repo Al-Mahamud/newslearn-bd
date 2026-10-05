@@ -1,0 +1,19 @@
+{
+ "word": {
+  "id": 1,
+  "word": "inflation",
+  "part_of_speech": "noun",
+  "meaning_en": "[mock] meaning of 'inflation'",
+  "meaning_bn": "[mock] 'inflation' শব্দের অর্থ",
+  "example_sentence": "[mock] An example sentence using inflation.",
+  "difficulty": 2,
+  "context_sentence": "Bangladesh Bank said inflation fell to 8.5% in September as sluggish credit growth limited spending.",
+  "saved": true
+ },
+ "article_id": 1,
+ "saved_at": "2026-10-05T15:54:01.181086Z",
+ "box": 0,
+ "learned": false,
+ "due_at": "2026-10-05T15:54:01.181088Z",
+ "review_count": 0
+}

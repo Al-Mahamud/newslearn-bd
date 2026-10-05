@@ -1,0 +1,25 @@
+# Render blueprint: New -> Blueprint -> pick this repository.
+# The API runs here; news collection and AI processing run in GitHub Actions
+# (.github/workflows/news-pipeline.yml), so the scheduler is off.
+services:
+  - type: web
+    name: newslearn-bd-api
+    runtime: docker
+    rootDir: backend
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: SCHEDULER_ENABLED
+        value: "false"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false # paste the PostgreSQL URL (e.g. from Neon)
+      - key: AI_PROVIDER
+        value: gemini
+      - key: GEMINI_API_KEY
+        sync: false # paste the key
+      - key: AI_DAILY_BUDGET_USD
+        value: "1.00"
