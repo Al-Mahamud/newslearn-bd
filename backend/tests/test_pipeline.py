@@ -152,3 +152,15 @@ def test_calls_are_paced_to_the_per_minute_limit(db, make_article, monkeypatch):
         make_article(process=False)
     assert pipeline.process_pending(db).ready == 3
     assert sleeps == [15.0, 15.0]  # no wait before the first call
+
+
+def test_an_overloaded_provider_defers_articles_then_ends_the_run(db, make_article):
+    from app.ai.base import AIUnavailable
+
+    ai.set_provider(Failing(AIUnavailable("high demand")))
+    articles = [make_article(process=False) for _ in range(5)]
+    result = pipeline.process_pending(db)
+    assert result.deferred == pipeline.MAX_CONSECUTIVE_OUTAGES and result.failed == 0
+    for article in articles:
+        db.refresh(article)
+        assert (article.status, article.attempts) == ("pending", 0)

@@ -7,7 +7,7 @@ import pytest
 from google import genai
 from google.genai import types
 
-from app.ai.base import AIConfigError, AIError, AIRefused
+from app.ai.base import AIConfigError, AIError, AIRateLimited, AIRefused, AIUnavailable
 from app.ai.gemini import GeminiProvider
 
 ENRICHMENT = {
@@ -111,18 +111,26 @@ def test_blocked_content_is_a_refusal():
         provider(blocked_prompt).explain_sentence(sentence="x", context="", level="b")
 
 
-def test_truncated_malformed_and_failed_calls_are_retryable_errors():
-    def enrich(p):
-        return p.enrich_article(title="t", text="x", source="s")
-
+def test_truncated_or_malformed_answers_are_retryable_errors():
     for broken in (
         provider(reply(json.dumps(ENRICHMENT)[:40], finish="MAX_TOKENS")),
         provider(reply("not json")),
-        provider({"error": {"code": 500, "message": "internal", "status": "INTERNAL"}}, 500),
     ):
         with pytest.raises(AIError) as raised:
-            enrich(broken)
-        assert not isinstance(raised.value, AIRefused)
+            broken.enrich_article(title="t", text="x", source="s")
+        assert type(raised.value) is AIError
+
+
+def test_overload_and_quota_are_reported_without_hidden_retries():
+    seen: list = []
+    busy = {"error": {"code": 503, "message": "high demand", "status": "UNAVAILABLE"}}
+    with pytest.raises(AIUnavailable):
+        provider(busy, 503, seen=seen).enrich_article(title="t", text="x", source="s")
+    assert len(seen) == 1  # each retry would count against the per-minute quota
+
+    quota = {"error": {"code": 429, "message": "quota exceeded", "status": "RESOURCE_EXHAUSTED"}}
+    with pytest.raises(AIRateLimited):
+        provider(quota, 429).enrich_article(title="t", text="x", source="s")
 
 
 def test_a_bad_key_or_retired_model_is_a_configuration_error():

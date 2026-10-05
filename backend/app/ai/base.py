@@ -84,6 +84,10 @@ class AIRateLimited(AIError):
     """The provider's quota is used up for now; wait before sending anything else."""
 
 
+class AIUnavailable(AIError):
+    """The provider is overloaded or down; the same request should work later."""
+
+
 class AIConfigError(AIError):
     """The key or model name is wrong; every call will fail until the settings change."""
 

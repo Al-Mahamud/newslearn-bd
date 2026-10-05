@@ -14,6 +14,7 @@ from app.ai.base import (
     AIError,
     AIRateLimited,
     AIRefused,
+    AIUnavailable,
     ArticleEnrichment,
 )
 from app.ai.prompts import PROMPT_VERSION
@@ -33,6 +34,7 @@ from app.services.textutil import truncate
 log = logging.getLogger(__name__)
 
 MAX_ATTEMPTS = 5
+MAX_CONSECUTIVE_OUTAGES = 3
 MIN_TEXT_CHARS = 80
 # Below this a feed item is only a teaser; fetch the page if the source allows it.
 FULL_TEXT_WANTED_BELOW = 600
@@ -46,6 +48,8 @@ class ProcessResult:
     ready: int = 0
     failed: int = 0
     skipped: int = 0
+    # Left pending because the provider was overloaded or out of quota.
+    deferred: int = 0
     stopped_for_budget: bool = False
     stopped_for_rate_limit: bool = False
 
@@ -163,6 +167,12 @@ def process_article(db: Session, article: Article) -> str:
         # Not this article's fault: give the attempt back and stop the whole run.
         article.attempts -= 1
         raise
+    except AIUnavailable as e:
+        # The provider's trouble, not the article's: it stays pending at no cost.
+        article.attempts -= 1
+        article.error = str(e)
+        log.warning("article %s: %s", article.id, e)
+        return "unavailable"
     except AIError as e:
         article.error = str(e)
         if article.attempts >= MAX_ATTEMPTS:
@@ -202,6 +212,7 @@ def process_pending(db: Session, limit: int | None = None) -> ProcessResult:
         .order_by(Article.published_at.desc())
         .limit(limit)
     ).all()
+    outages = 0
     for article_id in ids:
         if budget_exhausted(db):
             result.stopped_for_budget = True
@@ -217,6 +228,14 @@ def process_pending(db: Session, limit: int | None = None) -> ProcessResult:
             log.warning("%s; the rest wait for the next run", e)
             break
         db.commit()
+        if status == "unavailable":
+            result.deferred += 1
+            outages += 1
+            if outages >= MAX_CONSECUTIVE_OUTAGES:
+                log.warning("the AI provider keeps failing; the rest wait for the next run")
+                break
+            continue
+        outages = 0
         if status == "ready":
             result.ready += 1
         elif status == "skipped":

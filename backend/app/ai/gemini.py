@@ -9,6 +9,7 @@ from app.ai.base import (
     AIError,
     AIRateLimited,
     AIRefused,
+    AIUnavailable,
     AIUsageInfo,
     ArticleEnrichment,
     SentenceExplanationResult,
@@ -37,8 +38,8 @@ _BLOCKED = {
     types.FinishReason.PROHIBITED_CONTENT,
     types.FinishReason.SPII,
 }
-# 429 is not retried here: hammering a spent quota only delays its recovery.
-_RETRY_STATUS = [408, 500, 502, 503, 504]
+# The SDK does not retry: every retry counts against the per-minute quota, and the
+# pipeline already tries an article again on a later run.
 
 
 class GeminiProvider:
@@ -47,8 +48,7 @@ class GeminiProvider:
         self.client = client or genai.Client(
             api_key=api_key or None,  # falls back to GEMINI_API_KEY / GOOGLE_API_KEY
             http_options=types.HttpOptions(
-                timeout=120_000,
-                retry_options=types.HttpRetryOptions(attempts=3, http_status_codes=_RETRY_STATUS),
+                timeout=120_000, retry_options=types.HttpRetryOptions(attempts=1)
             ),
         )
 
@@ -93,9 +93,9 @@ class GeminiProvider:
                 ) from e
             raise AIError(f"Gemini rejected the request ({e.code}): {e.message}") from e
         except errors.APIError as e:
-            raise AIError(f"Gemini API error {e.code}: {e.message}") from e
+            raise AIUnavailable(f"Gemini is unavailable ({e.code}): {e.message}") from e
         except Exception as e:  # network failures surface as httpx errors
-            raise AIError(f"could not reach the Gemini API: {type(e).__name__}") from e
+            raise AIUnavailable(f"could not reach the Gemini API: {type(e).__name__}") from e
 
         feedback = response.prompt_feedback
         if feedback is not None and feedback.block_reason:
