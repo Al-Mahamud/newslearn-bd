@@ -4,6 +4,7 @@ import anthropic
 from pydantic import BaseModel
 
 from app.ai.base import (
+    AIConfigError,
     AIError,
     AIRefused,
     AIUsageInfo,
@@ -69,6 +70,14 @@ class ClaudeProvider:
                 response = self.client.messages.parse(output_format=schema, **kwargs)
             else:
                 response = self.client.messages.create(**kwargs)
+        except (
+            anthropic.AuthenticationError,
+            anthropic.PermissionDeniedError,
+            anthropic.NotFoundError,
+        ) as e:
+            raise AIConfigError(
+                f"Claude rejected the key or model {self.model!r}: {e.message}"
+            ) from e
         except anthropic.RateLimitError as e:
             raise AIError(f"rate limited: {e.message}") from e
         except anthropic.APIStatusError as e:

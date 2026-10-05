@@ -7,7 +7,7 @@ import pytest
 from google import genai
 from google.genai import types
 
-from app.ai.base import AIError, AIRefused
+from app.ai.base import AIConfigError, AIError, AIRefused
 from app.ai.gemini import GeminiProvider
 
 ENRICHMENT = {
@@ -54,7 +54,9 @@ def reply(text: str, finish="STOP", **extra) -> dict:
     }
 
 
-def provider(body: dict, status: int = 200, seen: list | None = None) -> GeminiProvider:
+def provider(
+    body: dict, status: int = 200, seen: list | None = None, model: str = "gemini-2.5-flash"
+) -> GeminiProvider:
     def handler(request: httpx.Request) -> httpx.Response:
         if seen is not None:
             seen.append(json.loads(request.content))
@@ -66,7 +68,7 @@ def provider(body: dict, status: int = 200, seen: list | None = None) -> GeminiP
             httpx_client=httpx.Client(transport=httpx.MockTransport(handler))
         ),
     )
-    return GeminiProvider(api_key="", client=client)
+    return GeminiProvider(api_key="", model=model, client=client)
 
 
 def test_enrichment_is_requested_as_json_and_parsed_with_usage():
@@ -116,11 +118,43 @@ def test_truncated_malformed_and_failed_calls_are_retryable_errors():
     for broken in (
         provider(reply(json.dumps(ENRICHMENT)[:40], finish="MAX_TOKENS")),
         provider(reply("not json")),
-        provider(
-            {"error": {"code": 400, "message": "API key not valid", "status": "INVALID_ARGUMENT"}},
-            400,
-        ),
+        provider({"error": {"code": 500, "message": "internal", "status": "INTERNAL"}}, 500),
     ):
         with pytest.raises(AIError) as raised:
             enrich(broken)
         assert not isinstance(raised.value, AIRefused)
+
+
+def test_a_bad_key_or_retired_model_is_a_configuration_error():
+    retired = {
+        "error": {"code": 404, "message": "model is no longer available", "status": "NOT_FOUND"}
+    }
+    bad_key = {
+        "error": {"code": 400, "message": "API key not valid.", "status": "INVALID_ARGUMENT"}
+    }
+    for body, status in ((retired, 404), (bad_key, 400)):
+        with pytest.raises(AIConfigError):
+            provider(body, status).enrich_article(title="t", text="x", source="s")
+
+
+def test_an_unlisted_model_is_costed_at_the_highest_known_rate():
+    _, usage = provider(reply(json.dumps(ENRICHMENT)), model="gemini-9-new").enrich_article(
+        title="t", text="x", source="s"
+    )
+    assert usage.cost_usd == pytest.approx((1000 * 1.25 + 500 * 10.0) / 1_000_000)
+
+
+def test_a_configuration_error_stops_the_run_without_using_up_attempts(db, make_article):
+    from app import ai
+    from app.services import pipeline
+
+    ai.set_provider(
+        provider({"error": {"code": 404, "message": "gone", "status": "NOT_FOUND"}}, 404)
+    )
+    first, second = make_article(process=False), make_article(process=False)
+    with pytest.raises(AIConfigError):
+        pipeline.process_pending(db)
+    db.rollback()
+    for article in (first, second):
+        db.refresh(article)
+        assert (article.status, article.attempts) == ("pending", 0)

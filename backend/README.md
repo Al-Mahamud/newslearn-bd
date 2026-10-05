@@ -37,7 +37,7 @@ GEMINI_API_KEY=your-key
 AI_DAILY_BUDGET_USD=1.00        # processing pauses for the day once this is spent
 ```
 
-Gemini uses `gemini-2.5-flash` unless `AI_MODEL` names another model. Claude works the
+Gemini uses `gemini-3.8-flash` unless `AI_MODEL` names another model. Claude works the
 same way with `AI_PROVIDER=claude` and `ANTHROPIC_API_KEY` (default `claude-opus-5-5`).
 
 Check it on two articles before letting the scheduler run:

@@ -58,7 +58,7 @@ class Settings(BaseSettings):
 
     @property
     def resolved_ai_model(self) -> str | None:
-        defaults = {"gemini": "gemini-2.5-flash", "claude": "claude-opus-5-5"}
+        defaults = {"gemini": "gemini-3.8-flash", "claude": "claude-opus-5-5"}
         return self.ai_model or defaults.get(self.ai_provider)
 
     @property

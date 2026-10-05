@@ -80,6 +80,10 @@ class AIError(Exception):
     """The provider call failed; worth retrying later."""
 
 
+class AIConfigError(AIError):
+    """The key or model name is wrong; every call will fail until the settings change."""
+
+
 class AIRefused(AIError):
     """The provider declined this content; retrying will not help."""
 

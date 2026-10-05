@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.ai import budget_exhausted, get_provider, record_usage
-from app.ai.base import DIFFICULTY_SCORE, AIError, AIRefused, ArticleEnrichment
+from app.ai.base import DIFFICULTY_SCORE, AIConfigError, AIError, AIRefused, ArticleEnrichment
 from app.ai.prompts import PROMPT_VERSION
 from app.config import get_settings
 from app.models import (
@@ -150,6 +150,10 @@ def process_article(db: Session, article: Article) -> str:
     except AIRefused as e:
         article.status, article.error = "skipped", str(e)
         return article.status
+    except AIConfigError:
+        # Not this article's fault: give the attempt back and stop the whole run.
+        article.attempts -= 1
+        raise
     except AIError as e:
         article.error = str(e)
         if article.attempts >= MAX_ATTEMPTS:

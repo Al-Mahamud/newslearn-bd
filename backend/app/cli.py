@@ -52,9 +52,15 @@ def main(argv: list[str] | None = None) -> int:
             for r in collector.collect_all(db):
                 print(f"{r.source}: {r.status} new={r.new} dup={r.duplicates} old={r.skipped_old}")
         elif args.command == "process":
+            from app.ai.base import AIConfigError
             from app.services import pipeline
 
-            print(pipeline.process_pending(db, args.limit))
+            try:
+                print(pipeline.process_pending(db, args.limit))
+            except AIConfigError as e:
+                # Exit non-zero so a scheduled run shows as failed instead of quietly doing nothing.
+                print(f"AI is misconfigured, nothing was processed: {e}", file=sys.stderr)
+                return 1
         elif args.command == "cleanup":
             from app.services import maintenance
 

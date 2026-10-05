@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException, Query, status
 from sqlalchemy import func, select
 
 from app.ai import local_today, spent_today
+from app.ai.base import AIConfigError
 from app.config import get_settings
 from app.deps import AdminUser, DbSession
 from app.models import CATEGORIES, AIUsage, Article, Source
@@ -59,7 +60,10 @@ def run_collection(db: DbSession, admin: AdminUser):
 @router.post("/process")
 def run_processing(db: DbSession, admin: AdminUser, limit: int = Query(5, ge=1, le=50)):
     """Run AI processing on pending articles now."""
-    return vars(pipeline.process_pending(db, limit))
+    try:
+        return vars(pipeline.process_pending(db, limit))
+    except AIConfigError as e:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, str(e)) from e
 
 
 @router.post("/articles/{article_id}/reprocess", status_code=status.HTTP_202_ACCEPTED)

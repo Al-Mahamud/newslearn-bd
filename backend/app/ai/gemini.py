@@ -5,6 +5,7 @@ from google.genai import errors, types
 from pydantic import BaseModel
 
 from app.ai.base import (
+    AIConfigError,
     AIError,
     AIRefused,
     AIUsageInfo,
@@ -15,11 +16,12 @@ from app.ai.prompts import ENRICH_SYSTEM, EXPLAIN_SYSTEM, TUTOR_SYSTEM
 
 log = logging.getLogger(__name__)
 
-DEFAULT_MODEL = "gemini-2.5-flash"
+DEFAULT_MODEL = "gemini-3.8-flash"
 
-# USD per million tokens (input, output). Check these against Google's current price list
-# when changing AI_MODEL; an unknown model is costed at the highest rate here so the daily
-# budget errs on the safe side.
+# USD per million tokens (input, output), used only to estimate spend for the daily budget.
+# A model missing from this table (including the default, whose price was not known when
+# this was written) is costed at the highest rate listed, so the budget stops early rather
+# than late. Add the real price of the model you use from Google's price list.
 PRICING = {
     "gemini-2.5-flash-lite": (0.10, 0.40),
     "gemini-2.5-flash": (0.30, 2.50),
@@ -67,6 +69,8 @@ class GeminiProvider:
         config = types.GenerateContentConfig(
             system_instruction=system,
             max_output_tokens=max_tokens,
+            # No tools are offered, so there is nothing for the SDK to call automatically.
+            automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
         )
         if schema is not None:
             config.response_mime_type = "application/json"
@@ -78,6 +82,11 @@ class GeminiProvider:
         except errors.ClientError as e:
             if e.code == 429:
                 raise AIError(f"rate limited: {e.message}") from e
+            if e.code in (401, 403, 404) or "API key" in (e.message or ""):
+                # A bad key or an unknown/retired model: nothing about the article is wrong.
+                raise AIConfigError(
+                    f"Gemini rejected the key or model {self.model!r} ({e.code}): {e.message}"
+                ) from e
             raise AIError(f"Gemini rejected the request ({e.code}): {e.message}") from e
         except errors.APIError as e:
             raise AIError(f"Gemini API error {e.code}: {e.message}") from e
