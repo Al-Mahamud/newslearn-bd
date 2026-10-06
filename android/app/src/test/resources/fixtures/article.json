@@ -4,7 +4,7 @@
  "source": "Test Times",
  "url": "https://example.com/0",
  "image_url": null,
- "published_at": "2026-10-05T15:54:01.053838Z",
+ "published_at": "2026-10-06T22:59:08.488876Z",
  "category": "economy",
  "summary": "[mock] Bangladesh Bank said inflation fell to 8.5% in September as sluggish credit growth limited spending. The government expects remittance inflows to strengthen reserves.",
  "exam_importance": 70,
@@ -26,7 +26,12 @@
    "example_sentence": "[mock] An example sentence using inflation.",
    "difficulty": 2,
    "context_sentence": "Bangladesh Bank said inflation fell to 8.5% in September as sluggish credit growth limited spending.",
-   "saved": false
+   "saved": false,
+   "known": false,
+   "synonyms": [
+    "[mock] similar to inflation"
+   ],
+   "seen_in": 3
   },
   {
    "id": 2,
@@ -37,7 +42,12 @@
    "example_sentence": "[mock] An example sentence using government.",
    "difficulty": 2,
    "context_sentence": "The government expects remittance inflows to strengthen reserves.",
-   "saved": false
+   "saved": false,
+   "known": false,
+   "synonyms": [
+    "[mock] similar to government"
+   ],
+   "seen_in": 3
   },
   {
    "id": 3,
@@ -48,7 +58,12 @@
    "example_sentence": "[mock] An example sentence using remittance.",
    "difficulty": 2,
    "context_sentence": "The government expects remittance inflows to strengthen reserves.",
-   "saved": false
+   "saved": false,
+   "known": false,
+   "synonyms": [
+    "[mock] similar to remittance"
+   ],
+   "seen_in": 3
   },
   {
    "id": 4,
@@ -59,7 +74,12 @@
    "example_sentence": "[mock] An example sentence using strengthen.",
    "difficulty": 2,
    "context_sentence": "The government expects remittance inflows to strengthen reserves.",
-   "saved": false
+   "saved": false,
+   "known": false,
+   "synonyms": [
+    "[mock] similar to strengthen"
+   ],
+   "seen_in": 3
   },
   {
    "id": 5,
@@ -70,7 +90,12 @@
    "example_sentence": "[mock] An example sentence using austerity.",
    "difficulty": 2,
    "context_sentence": "Economists warned that austerity measures could slow infrastructure development.",
-   "saved": false
+   "saved": false,
+   "known": false,
+   "synonyms": [
+    "[mock] similar to austerity"
+   ],
+   "seen_in": 3
   }
  ],
  "facts": [

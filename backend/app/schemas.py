@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
 EnglishLevel = Literal["beginner", "intermediate", "advanced"]
 
@@ -34,6 +34,8 @@ class UserOut(ORM):
     display_name: str
     english_level: EnglishLevel
     preferred_categories: list[str]
+    daily_article_goal: int
+    daily_word_goal: int
     is_admin: bool
 
 
@@ -49,6 +51,8 @@ class UpdateProfileRequest(BaseModel):
     display_name: str | None = Field(default=None, max_length=100)
     english_level: EnglishLevel | None = None
     preferred_categories: list[str] | None = None
+    daily_article_goal: int | None = Field(default=None, ge=1, le=20)
+    daily_word_goal: int | None = Field(default=None, ge=1, le=30)
 
 
 # --- articles -------------------------------------------------------------------------
@@ -90,6 +94,11 @@ class WordOut(BaseModel):
     difficulty: int
     context_sentence: str = ""
     saved: bool = False
+    # The reader marked it "I know it": do not highlight or teach it.
+    known: bool = False
+    synonyms: list[str] = []
+    # How many articles have used this word.
+    seen_in: int = 0
 
 
 class FactOut(ORM):
@@ -127,7 +136,20 @@ class UserWordOut(BaseModel):
 
 
 class ReviewRequest(BaseModel):
-    remembered: bool
+    """Send `rating`. `remembered` is the older two-answer form and is still accepted."""
+
+    rating: Literal["forgot", "hard", "good"] | None = None
+    remembered: bool | None = None
+
+    @model_validator(mode="after")
+    def _one_is_given(self):
+        if self.rating is None and self.remembered is None:
+            raise ValueError("rating is required")
+        return self
+
+    @property
+    def resolved(self) -> str:
+        return self.rating or ("good" if self.remembered else "forgot")
 
 
 # --- learning -------------------------------------------------------------------------
@@ -208,6 +230,8 @@ class QuestionOut(BaseModel):
 class QuizOut(BaseModel):
     id: int
     kind: str
+    # False for mock exams: there the answers stay hidden until the end.
+    instant_feedback: bool
     title: str
     category: str | None
     for_date: date | None
@@ -230,6 +254,19 @@ class AnswerIn(BaseModel):
 class SubmitQuizRequest(BaseModel):
     answers: list[AnswerIn]
     duration_seconds: int | None = Field(default=None, ge=0)
+
+
+class CheckAnswerRequest(BaseModel):
+    question_id: int
+    selected_index: int = Field(ge=0, le=3)
+
+
+class CheckAnswerResponse(BaseModel):
+    question_id: int
+    correct: bool
+    correct_index: int
+    explanation: str
+    article_id: int
 
 
 class AnswerReview(BaseModel):
@@ -291,6 +328,10 @@ class ProgressResponse(BaseModel):
     words_saved: int
     words_learned: int
     words_due: int
+    words_saved_today: int
+    quizzes_today: int
+    daily_article_goal: int
+    daily_word_goal: int
     quizzes_taken: int
     average_score_percent: int
     topics: list[TopicAccuracy]

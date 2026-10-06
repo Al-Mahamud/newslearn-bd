@@ -10,6 +10,8 @@ from app.schemas import (
     AnswerReview,
     AttemptResult,
     AttemptSummary,
+    CheckAnswerRequest,
+    CheckAnswerResponse,
     CreateQuizRequest,
     QuestionOut,
     QuizOut,
@@ -30,6 +32,7 @@ def _quiz_out(quiz: Quiz) -> QuizOut:
     return QuizOut(
         id=quiz.id,
         kind=quiz.kind,
+        instant_feedback=quiz.kind != "mock",
         title=quiz.title,
         category=quiz.category,
         for_date=quiz.for_date,
@@ -140,6 +143,26 @@ def article_quiz(article_id: int, db: DbSession, user: CurrentUser):
 @router.get("/quizzes/{quiz_id}", response_model=QuizOut)
 def get_quiz(quiz_id: int, db: DbSession, user: CurrentUser):
     return _quiz_out(_get_quiz(db, quiz_id, user))
+
+
+@router.post("/quizzes/{quiz_id}/check", response_model=CheckAnswerResponse)
+def check_answer(quiz_id: int, body: CheckAnswerRequest, db: DbSession, user: CurrentUser):
+    """Says at once whether one answer is right. Not available in a mock exam."""
+    quiz = _get_quiz(db, quiz_id, user)
+    if quiz.kind == "mock":
+        raise HTTPException(
+            status.HTTP_409_CONFLICT, "A mock exam shows its answers only at the end"
+        )
+    question = next((i.question for i in quiz.items if i.question_id == body.question_id), None)
+    if question is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "That question is not in this quiz")
+    return CheckAnswerResponse(
+        question_id=question.id,
+        correct=body.selected_index == question.correct_index,
+        correct_index=question.correct_index,
+        explanation=question.explanation,
+        article_id=question.article_id,
+    )
 
 
 @router.post("/quizzes/{quiz_id}/attempts", response_model=AttemptResult)

@@ -14,7 +14,7 @@ router = APIRouter(tags=["vocabulary"])
 
 def _out(entry: UserWord, context: str = "") -> UserWordOut:
     return UserWordOut(
-        word=word_out(entry.word, context=context, saved=True),
+        word=word_out(entry.word, context=context, state=entry.known),
         article_id=entry.article_id,
         saved_at=entry.saved_at,
         box=entry.box,
@@ -47,7 +47,7 @@ def my_words(
     limit: int = Query(100, ge=1, le=500),
     offset: int = Query(0, ge=0),
 ):
-    query = select(UserWord).where(UserWord.user_id == user.id)
+    query = select(UserWord).where(UserWord.user_id == user.id, UserWord.known.is_(False))
     if status_filter == "learning":
         query = query.where(UserWord.box < srs.LEARNED_BOX)
     elif status_filter == "learned":
@@ -61,7 +61,7 @@ def due_for_review(db: DbSession, user: CurrentUser, limit: int = Query(20, ge=1
     """Saved words whose review is due, longest-overdue first."""
     entries = db.scalars(
         select(UserWord)
-        .where(UserWord.user_id == user.id, UserWord.due_at <= utcnow())
+        .where(UserWord.user_id == user.id, UserWord.known.is_(False), UserWord.due_at <= utcnow())
         .order_by(UserWord.due_at)
         .limit(limit)
     ).all()
@@ -81,6 +81,26 @@ def save_word(word_id: int, db: DbSession, user: CurrentUser, body: SaveWordRequ
         db.add(entry)
         db.commit()
         db.refresh(entry)
+    elif entry.known:
+        # Changed their mind: learn it after all, starting from the beginning.
+        entry.known, entry.box, entry.due_at = False, 0, utcnow()
+        db.commit()
+        db.refresh(entry)
+    return _with_context(db, [entry])[0]
+
+
+@router.put("/vocabulary/{word_id}/known", response_model=UserWordOut)
+def mark_known(word_id: int, db: DbSession, user: CurrentUser):
+    """Marks a word "I know it": no more highlighting or review. DELETE the word to undo."""
+    if db.get(Word, word_id) is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Word not found")
+    entry = db.get(UserWord, (user.id, word_id))
+    if entry is None:
+        entry = UserWord(user_id=user.id, word_id=word_id)
+        db.add(entry)
+    entry.known = True
+    db.commit()
+    db.refresh(entry)
     return _with_context(db, [entry])[0]
 
 
@@ -97,6 +117,8 @@ def review_word(word_id: int, body: ReviewRequest, db: DbSession, user: CurrentU
     entry = db.get(UserWord, (user.id, word_id))
     if entry is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Word is not in your vocabulary")
-    srs.apply_review(entry, body.remembered, utcnow())
+    if entry.known:
+        raise HTTPException(status.HTTP_409_CONFLICT, "This word is marked as known")
+    srs.apply_review(entry, body.resolved, utcnow())
     db.commit()
     return _with_context(db, [entry])[0]

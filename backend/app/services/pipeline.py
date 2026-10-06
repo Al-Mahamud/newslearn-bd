@@ -41,6 +41,7 @@ FULL_TEXT_WANTED_BELOW = 600
 MAX_VOCABULARY = 8
 MAX_FACTS = 8
 MAX_QUESTIONS = 3
+MAX_SYNONYMS = 4
 
 
 @dataclass
@@ -73,6 +74,11 @@ def _valid_question(q) -> bool:
         and len({o.lower() for o in options}) == 4
         and 0 <= q.correct_index < 4
     )
+
+
+def _clean_synonyms(values: list[str], lemma: str) -> list[str]:
+    cleaned = dict.fromkeys(" ".join(v.lower().split())[:60] for v in values)
+    return [v for v in cleaned if v and v != lemma][:MAX_SYNONYMS]
 
 
 def apply_enrichment(db: Session, article: Article, data: ArticleEnrichment, model: str) -> None:
@@ -110,6 +116,9 @@ def apply_enrichment(db: Session, article: Article, data: ArticleEnrichment, mod
             )
             db.add(word)
             db.flush()
+        if not word.synonyms:
+            # Also fills in words stored before synonyms were collected.
+            word.synonyms = _clean_synonyms(item.synonyms, lemma)
         word.occurrences += 1
         article.words.append(
             ArticleWord(

@@ -27,6 +27,10 @@ class VocabularyItem(BaseModel):
     example_sentence: str = Field(description="A new, simple sentence using the word")
     context_sentence: str = Field(description="The sentence from the article using the word")
     difficulty: Difficulty
+    synonyms: list[str] = Field(
+        default_factory=list,
+        description="Up to 4 common words of similar meaning, lowercase; empty if none fit",
+    )
 
 
 class FactItem(BaseModel):

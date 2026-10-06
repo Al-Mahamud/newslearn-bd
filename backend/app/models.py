@@ -64,6 +64,9 @@ class User(Base):
     display_name: Mapped[str] = mapped_column(String(100), default="")
     english_level: Mapped[str] = mapped_column(String(20), default="intermediate")
     preferred_categories: Mapped[list] = mapped_column(JSON, default=list)
+    # Daily targets shown as the goal ring on the app's Today screen.
+    daily_article_goal: Mapped[int] = mapped_column(Integer, default=5, server_default="5")
+    daily_word_goal: Mapped[int] = mapped_column(Integer, default=5, server_default="5")
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
 
@@ -172,6 +175,8 @@ class Word(Base):
     meaning_bn: Mapped[str] = mapped_column(String(500))
     example_sentence: Mapped[str] = mapped_column(String(600), default="")
     difficulty: Mapped[int] = mapped_column(Integer, default=2)  # 1 easy .. 3 hard
+    # Up to four near-synonyms a learner could meet in the same contexts.
+    synonyms: Mapped[list] = mapped_column(JSON, default=list, server_default="[]")
     # How many articles used this word: the "newspaper frequency" signal.
     occurrences: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
@@ -213,6 +218,9 @@ class UserWord(Base):
     review_count: Mapped[int] = mapped_column(Integer, default=0)
     correct_count: Mapped[int] = mapped_column(Integer, default=0)
     last_reviewed_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
+    # "I know it": the reader already knows this word, so it is neither highlighted nor
+    # reviewed, and does not count as a word they learned here.
+    known: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
 
     word: Mapped[Word] = relationship(lazy="joined")
 

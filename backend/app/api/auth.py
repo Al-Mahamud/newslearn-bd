@@ -127,5 +127,9 @@ def update_me(body: UpdateProfileRequest, user: CurrentUser, db: DbSession):
         if unknown:
             raise HTTPException(422, f"Unknown categories: {sorted(unknown)}")
         user.preferred_categories = list(dict.fromkeys(body.preferred_categories))
+    if body.daily_article_goal is not None:
+        user.daily_article_goal = body.daily_article_goal
+    if body.daily_word_goal is not None:
+        user.daily_word_goal = body.daily_word_goal
     db.commit()
     return user

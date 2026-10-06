@@ -22,7 +22,12 @@
             "meaning_bn": "তদারক করা",
             "example_sentence": "A senior engineer will oversee the new project.",
             "context_sentence": "The ICT Division drafted the policy and will oversee it.",
-            "difficulty": "medium"
+            "difficulty": "medium",
+            "synonyms": [
+              "supervise",
+              "monitor",
+              "manage"
+            ]
           },
           {
             "word": "framework",
@@ -31,7 +36,12 @@
             "meaning_bn": "কাঠামো",
             "example_sentence": "The school follows a national framework for teaching science.",
             "context_sentence": "The policy sets a framework for public-sector AI.",
-            "difficulty": "medium"
+            "difficulty": "medium",
+            "synonyms": [
+              "structure",
+              "system",
+              "outline"
+            ]
           },
           {
             "word": "safeguard",
@@ -40,19 +50,37 @@
             "meaning_bn": "সুরক্ষিত রাখা",
             "example_sentence": "Strong passwords safeguard your accounts.",
             "context_sentence": "It is meant to safeguard citizens' data.",
-            "difficulty": "hard"
+            "difficulty": "hard",
+            "synonyms": [
+              "protect",
+              "secure",
+              "defend"
+            ]
           }
         ],
         "facts": [
-          {"kind": "fact", "text": "First national AI policy of Bangladesh", "detail": "Approved by the cabinet"},
-          {"kind": "organization", "text": "ICT Division", "detail": "Drafted the policy and will oversee it"}
+          {
+            "kind": "fact",
+            "text": "First national AI policy of Bangladesh",
+            "detail": "Approved by the cabinet"
+          },
+          {
+            "kind": "organization",
+            "text": "ICT Division",
+            "detail": "Drafted the policy and will oversee it"
+          }
         ],
         "exam_importance": 92,
         "exam_reason": "A first-of-its-kind national ICT policy is a likely question for ICT posts and BCS general knowledge.",
         "questions": [
           {
             "question": "Which body drafted Bangladesh's first national AI policy?",
-            "options": ["ICT Division", "BTRC", "Bangladesh Computer Council", "Planning Commission"],
+            "options": [
+              "ICT Division",
+              "BTRC",
+              "Bangladesh Computer Council",
+              "Planning Commission"
+            ],
             "correct_index": 0,
             "explanation": "The article states that the ICT Division drafted the policy and will oversee it."
           }

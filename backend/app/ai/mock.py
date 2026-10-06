@@ -107,6 +107,7 @@ class MockProvider:
                         example_sentence=f"{TAG} An example sentence using {word}.",
                         context_sentence=sentence[:500],
                         difficulty="medium",
+                        synonyms=[f"{TAG} similar to {word}"],
                     )
                 )
         vocabulary = vocabulary[:5]

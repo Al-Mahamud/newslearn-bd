@@ -57,7 +57,7 @@ All nine fields are required. Use an empty list `[]` when there is nothing to pu
 | `exam_reason` | text | One sentence: why it is worth remembering |
 | `questions` | list | 0–3 multiple-choice questions (see below) |
 
-### One `vocabulary` item — all seven fields required
+### One `vocabulary` item — the first seven fields are required
 
 | Field | Rules |
 |---|---|
@@ -68,6 +68,7 @@ All nine fields are required. Use an empty list `[]` when there is nothing to pu
 | `example_sentence` | A new, simple sentence using the word |
 | `context_sentence` | The sentence from the article where the word appears |
 | `difficulty` | Exactly one of: `easy`, `medium`, `hard` |
+| `synonyms` | Optional. A list of up to 4 common words with a similar meaning, lowercase: `["supervise", "monitor"]`. Use `[]` or leave it out if none fit |
 
 ### One `facts` item — all three fields required
 

@@ -23,6 +23,7 @@ ANALYSIS = {
             "example_sentence": "The framework explains how schools should use computers.",
             "context_sentence": "The policy sets a framework for public-sector AI.",
             "difficulty": "medium",
+            "synonyms": ["Structure", "system", "framework", "outline", "plan", "scheme"],
         }
     ],
     "facts": [{"kind": "organization", "text": "ICT Division", "detail": "Drafted the policy"}],
@@ -67,6 +68,8 @@ def test_agent_articles_appear_in_the_app_like_any_other(db, client):
     assert card["source"] == "The Daily Star" and card["exam_important"] is True
     detail = client.get(f"{API}/articles/{card['id']}").json()
     assert detail["vocabulary"][0]["meaning_bn"] == "কাঠামো"
+    # Lowercased, without the word itself or repeats, and capped at four.
+    assert detail["vocabulary"][0]["synonyms"] == ["structure", "system", "outline", "plan"]
     assert detail["question_count"] == 1 and detail["author"] == "Page 3"
 
     article = db.get(Article, card["id"])

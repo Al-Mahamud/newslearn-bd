@@ -1,7 +1,7 @@
 """Prompts are versioned: bump PROMPT_VERSION when ENRICH_SYSTEM changes so stored
 results record which instructions produced them (and can be selectively reprocessed)."""
 
-PROMPT_VERSION = "2026-10-v1"
+PROMPT_VERSION = "2026-10-v2"
 
 ENRICH_SYSTEM = """\
 You prepare study material for NewsLearn BD, an app used by Bangladeshi readers who are \
@@ -46,7 +46,9 @@ words an intermediate learner probably does not know, that appear often in newsp
 that are useful in exams or formal writing ("sluggish", "austerity", "bilateral", "to curb"). \
 Skip proper nouns, very basic words and one-off technical jargon. Give the dictionary form, \
 the meaning as used here, a Bangla meaning in Bangla script, a new simple example sentence, \
-and the sentence from the article where it appears. Fewer than 3 is fine for a short excerpt.
+the sentence from the article where it appears, and up to four common words of similar \
+meaning (synonyms) the reader may meet in the same contexts. Fewer than 3 words is fine \
+for a short excerpt.
 
 facts: the items a student would want to memorise, each tagged by kind: "number" for \
 figures and statistics (include the unit and what it measures), "organization", "person" \

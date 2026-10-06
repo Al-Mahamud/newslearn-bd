@@ -126,7 +126,9 @@ recognisable: বিটিআরসি, আইএমএফ.
 Good choices: *sluggish*, *austerity*, *bilateral*, *to curb*, *to oversee*, *mandate*,
 *scrutiny*. Skip proper nouns, basic words (*increase*, *government*) and one-off
 technical terms. Give the dictionary form, the meaning *as used here*, the Bangla
-meaning, a new simple example sentence, and the sentence from the article.
+meaning, a new simple example sentence, and the sentence from the article. Add up to four
+`synonyms`: common words of similar meaning the reader will meet in the same contexts
+(*curb* → *limit*, *restrain*, *check*). Leave the list empty rather than force a poor match.
 
 **facts** — up to 8 items to memorise, most important first. Tag each: `number`,
 `organization`, `person`, `place`, `date`, or `fact`. A number needs its unit and what it

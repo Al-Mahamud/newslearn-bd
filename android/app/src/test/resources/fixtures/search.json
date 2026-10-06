@@ -6,7 +6,7 @@
    "source": "Test Times",
    "url": "https://example.com/0",
    "image_url": null,
-   "published_at": "2026-10-05T15:54:01.053838Z",
+   "published_at": "2026-10-06T22:59:08.488876Z",
    "category": "economy",
    "summary": "[mock] Bangladesh Bank said inflation fell to 8.5% in September as sluggish credit growth limited spending. The government expects remittance inflows to strengthen reserves.",
    "exam_importance": 70,
@@ -21,7 +21,7 @@
    "source": "Test Times",
    "url": "https://example.com/1",
    "image_url": "https://example.com/i.jpg",
-   "published_at": "2026-10-05T15:53:01.070927Z",
+   "published_at": "2026-10-06T22:58:08.504676Z",
    "category": "economy",
    "summary": "[mock] Bangladesh Bank said inflation fell to 8.5% in September as sluggish credit growth limited spending. The government expects remittance inflows to strengthen reserves.",
    "exam_importance": 70,
@@ -36,7 +36,7 @@
    "source": "Test Times",
    "url": "https://example.com/2",
    "image_url": "https://example.com/i.jpg",
-   "published_at": "2026-10-05T15:52:01.076077Z",
+   "published_at": "2026-10-06T22:57:08.510036Z",
    "category": "economy",
    "summary": "[mock] Bangladesh Bank said inflation fell to 8.5% in September as sluggish credit growth limited spending. The government expects remittance inflows to strengthen reserves.",
    "exam_importance": 70,
@@ -56,7 +56,12 @@
    "example_sentence": "[mock] An example sentence using inflation.",
    "difficulty": 2,
    "context_sentence": "",
-   "saved": true
+   "saved": true,
+   "known": false,
+   "synonyms": [
+    "[mock] similar to inflation"
+   ],
+   "seen_in": 3
   }
  ]
 }

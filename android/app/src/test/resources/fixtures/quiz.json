@@ -1,9 +1,10 @@
 {
  "id": 1,
  "kind": "daily",
- "title": "Daily quiz — 05 Oct 2026",
+ "instant_feedback": true,
+ "title": "Daily quiz — 07 Oct 2026",
  "category": null,
- "for_date": "2026-10-05",
+ "for_date": "2026-10-07",
  "time_limit_seconds": null,
  "questions": [
   {

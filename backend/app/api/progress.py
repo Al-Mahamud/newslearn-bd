@@ -52,8 +52,11 @@ def my_progress(db: DbSession, user: CurrentUser):
         streak += 1
         cursor -= timedelta(days=1)
 
+    # Words marked "I know it" were never studied here, so they are left out of every count.
     words = db.execute(
-        select(UserWord.box, UserWord.due_at).where(UserWord.user_id == user.id)
+        select(UserWord.box, UserWord.due_at, UserWord.saved_at).where(
+            UserWord.user_id == user.id, UserWord.known.is_(False)
+        )
     ).all()
     now = utcnow()
 
@@ -81,8 +84,12 @@ def my_progress(db: DbSession, user: CurrentUser):
         )
         or 0,
         words_saved=len(words),
-        words_learned=sum(1 for box, _ in words if box >= srs.LEARNED_BOX),
-        words_due=sum(1 for _, due_at in words if due_at <= now),
+        words_learned=sum(1 for box, _, _ in words if box >= srs.LEARNED_BOX),
+        words_due=sum(1 for _, due_at, _ in words if due_at <= now),
+        words_saved_today=sum(1 for _, _, saved_at in words if local_date(saved_at) == today),
+        quizzes_today=quiz_days.get(today, 0),
+        daily_article_goal=user.daily_article_goal,
+        daily_word_goal=user.daily_word_goal,
         quizzes_taken=len(attempts),
         average_score_percent=round(100 * total_score / total_questions) if total_questions else 0,
         topics=topics,

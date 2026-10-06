@@ -189,7 +189,7 @@ def test_review_intervals_follow_the_schedule():
     entry = UserWord(user_id=1, word_id=1, box=0, due_at=now, review_count=0, correct_count=0)
     gaps = []
     for _ in range(4):
-        srs.apply_review(entry, True, now)
+        srs.apply_review(entry, "good", now)
         gaps.append((entry.due_at - now).days)
     assert gaps == [1, 3, 7, 30]
 
@@ -370,3 +370,124 @@ def test_admin_process_and_status(client, auth, make_article):
 
 def test_health(client):
     assert client.get("/health").json() == {"status": "ok"}
+
+
+# --- step 2: goals, instant answers, known words ---------------------------------------
+
+
+def test_hard_keeps_the_word_in_its_box_and_brings_it_back_tomorrow():
+    now = utcnow()
+    entry = UserWord(user_id=1, word_id=1, box=3, due_at=now, review_count=0, correct_count=0)
+    srs.apply_review(entry, "hard", now)
+    assert (entry.box, (entry.due_at - now).days) == (3, 1)
+
+    new = UserWord(user_id=1, word_id=2, box=0, due_at=now, review_count=0, correct_count=0)
+    srs.apply_review(new, "hard", now)
+    assert new.box == 1  # it was remembered, so it leaves the "again today" pile
+
+
+def test_review_accepts_ratings_and_the_older_form(client, auth, make_article):
+    article = make_article()
+    word_id = article.words[0].word_id
+    client.put(f"{API}/vocabulary/{word_id}", headers=auth)
+    url = f"{API}/vocabulary/{word_id}/review"
+
+    assert client.post(url, headers=auth, json={"rating": "good"}).json()["box"] == 1
+    assert client.post(url, headers=auth, json={"rating": "hard"}).json()["box"] == 1
+    assert client.post(url, headers=auth, json={"remembered": True}).json()["box"] == 2
+    assert client.post(url, headers=auth, json={"rating": "forgot"}).json()["box"] == 0
+    assert client.post(url, headers=auth, json={}).status_code == 422
+    assert client.post(url, headers=auth, json={"rating": "easy"}).status_code == 422
+
+
+def test_known_words_are_not_taught_reviewed_or_counted(client, auth, make_article):
+    article = make_article()
+    known_id, saved_id = article.words[0].word_id, article.words[1].word_id
+
+    r = client.put(f"{API}/vocabulary/{known_id}/known", headers=auth)
+    assert r.status_code == 200 and r.json()["word"]["known"] is True
+    client.put(f"{API}/vocabulary/{saved_id}", headers=auth)
+
+    words = {
+        w["id"]: w
+        for w in client.get(f"{API}/articles/{article.id}", headers=auth).json()["vocabulary"]
+    }
+    assert (words[known_id]["known"], words[known_id]["saved"]) == (True, False)
+    assert (words[saved_id]["known"], words[saved_id]["saved"]) == (False, True)
+
+    assert [w["word"]["id"] for w in client.get(f"{API}/vocabulary", headers=auth).json()] == [
+        saved_id
+    ]
+    assert [
+        w["word"]["id"] for w in client.get(f"{API}/vocabulary/review", headers=auth).json()
+    ] == [saved_id]
+    review = client.post(
+        f"{API}/vocabulary/{known_id}/review", headers=auth, json={"rating": "good"}
+    )
+    assert review.status_code == 409
+
+    progress = client.get(f"{API}/me/progress", headers=auth).json()
+    assert (progress["words_saved"], progress["words_saved_today"]) == (1, 1)
+
+    # Saving a known word means "teach me after all".
+    again = client.put(f"{API}/vocabulary/{known_id}", headers=auth).json()
+    assert again["word"]["known"] is False and again["word"]["saved"] is True
+    assert client.put(f"{API}/vocabulary/99999/known", headers=auth).status_code == 404
+
+
+def test_words_report_synonyms_and_how_often_they_appear(client, db, make_article):
+    first = make_article()
+    make_article()
+    word = first.words[0].word
+    word.synonyms = ["slow", "weak"]
+    db.commit()
+    shown = client.get(f"{API}/articles/{first.id}").json()["vocabulary"][0]
+    assert shown["synonyms"] == ["slow", "weak"] and shown["seen_in"] == 2
+
+
+def test_daily_goals_can_be_changed_and_progress_counts_today(client, auth, make_article):
+    assert client.get(f"{API}/me", headers=auth).json()["daily_article_goal"] == 5
+    r = client.patch(
+        f"{API}/me", headers=auth, json={"daily_article_goal": 3, "daily_word_goal": 8}
+    )
+    assert (r.json()["daily_article_goal"], r.json()["daily_word_goal"]) == (3, 8)
+    assert (
+        client.patch(f"{API}/me", headers=auth, json={"daily_article_goal": 0}).status_code == 422
+    )
+
+    article = make_article(hours_ago=0)
+    client.post(f"{API}/articles/{article.id}/read", headers=auth)
+    quiz = client.post(f"{API}/articles/{article.id}/quiz", headers=auth).json()
+    client.post(f"{API}/quizzes/{quiz['id']}/attempts", headers=auth, json={"answers": []})
+
+    progress = client.get(f"{API}/me/progress", headers=auth).json()
+    assert (progress["daily_article_goal"], progress["daily_word_goal"]) == (3, 8)
+    assert (progress["articles_read_today"], progress["quizzes_today"]) == (1, 1)
+
+
+def test_answers_can_be_checked_one_at_a_time_except_in_a_mock_exam(client, auth, make_article):
+    article = make_article()
+    quiz = client.post(f"{API}/articles/{article.id}/quiz", headers=auth).json()
+    assert quiz["instant_feedback"] is True
+    question_id = quiz["questions"][0]["id"]
+    url = f"{API}/quizzes/{quiz['id']}/check"
+
+    right = client.post(
+        url, headers=auth, json={"question_id": question_id, "selected_index": 0}
+    ).json()
+    assert right["correct"] is True and right["explanation"] and right["article_id"] == article.id
+    wrong = client.post(
+        url, headers=auth, json={"question_id": question_id, "selected_index": 2}
+    ).json()
+    assert (wrong["correct"], wrong["correct_index"]) == (False, 0)
+    missing = client.post(url, headers=auth, json={"question_id": 99999, "selected_index": 0})
+    assert missing.status_code == 404
+
+    mock = client.post(f"{API}/quizzes", headers=auth, json={"kind": "mock"}).json()
+    assert mock["instant_feedback"] is False
+    blocked = client.post(
+        f"{API}/quizzes/{mock['id']}/check",
+        headers=auth,
+        json={"question_id": mock["questions"][0]["id"], "selected_index": 0},
+    )
+    assert blocked.status_code == 409

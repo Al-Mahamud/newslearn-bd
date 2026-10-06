@@ -6,6 +6,10 @@
  "words_saved": 1,
  "words_learned": 0,
  "words_due": 1,
+ "words_saved_today": 1,
+ "quizzes_today": 1,
+ "daily_article_goal": 5,
+ "daily_word_goal": 5,
  "quizzes_taken": 1,
  "average_score_percent": 33,
  "topics": [
@@ -19,16 +23,6 @@
  ],
  "weakest_topic": null,
  "last_7_days": [
-  {
-   "day": "2026-09-29",
-   "articles_read": 0,
-   "quizzes_taken": 0
-  },
-  {
-   "day": "2026-09-30",
-   "articles_read": 0,
-   "quizzes_taken": 0
-  },
   {
    "day": "2026-10-01",
    "articles_read": 0,
@@ -51,6 +45,16 @@
   },
   {
    "day": "2026-10-05",
+   "articles_read": 0,
+   "quizzes_taken": 0
+  },
+  {
+   "day": "2026-10-06",
+   "articles_read": 0,
+   "quizzes_taken": 0
+  },
+  {
+   "day": "2026-10-07",
    "articles_read": 1,
    "quizzes_taken": 1
   }

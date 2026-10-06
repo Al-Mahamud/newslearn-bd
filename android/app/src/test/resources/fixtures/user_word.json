@@ -8,12 +8,17 @@
   "example_sentence": "[mock] An example sentence using inflation.",
   "difficulty": 2,
   "context_sentence": "Bangladesh Bank said inflation fell to 8.5% in September as sluggish credit growth limited spending.",
-  "saved": true
+  "saved": true,
+  "known": false,
+  "synonyms": [
+   "[mock] similar to inflation"
+  ],
+  "seen_in": 3
  },
  "article_id": 1,
- "saved_at": "2026-10-05T15:54:01.181086Z",
+ "saved_at": "2026-10-06T22:59:08.628993Z",
  "box": 0,
  "learned": false,
- "due_at": "2026-10-05T15:54:01.181088Z",
+ "due_at": "2026-10-06T22:59:08.628994Z",
  "review_count": 0
 }

@@ -46,7 +46,21 @@ def decode_cursor(cursor: str) -> tuple[datetime, int]:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid cursor") from e
 
 
-def word_out(word: Word, *, context: str = "", saved: bool = False) -> WordOut:
+def user_word_states(db: Session, user: User | None, word_ids: list[int]) -> dict[int, bool]:
+    """word id -> whether the reader marked it known, for the words they have any record of."""
+    if user is None or not word_ids:
+        return {}
+    return dict(
+        db.execute(
+            select(UserWord.word_id, UserWord.known).where(
+                UserWord.user_id == user.id, UserWord.word_id.in_(word_ids)
+            )
+        ).all()
+    )
+
+
+def word_out(word: Word, *, context: str = "", state: bool | None = None) -> WordOut:
+    """`state` is the reader's record of the word: None = none, False = saved, True = known."""
     return WordOut(
         id=word.id,
         word=word.lemma,
@@ -56,7 +70,10 @@ def word_out(word: Word, *, context: str = "", saved: bool = False) -> WordOut:
         example_sentence=word.example_sentence,
         difficulty=word.difficulty,
         context_sentence=context,
-        saved=saved,
+        saved=state is False,
+        known=state is True,
+        synonyms=word.synonyms or [],
+        seen_in=word.occurrences,
     )
 
 
@@ -186,16 +203,7 @@ def get_article(article_id: int, db: DbSession, user: OptionalUser):
         harder = [link for link in links if link.word.difficulty >= 2]
         if len(harder) >= 3:
             links = harder
-    saved_words: set[int] = set()
-    if user and links:
-        saved_words = set(
-            db.scalars(
-                select(UserWord.word_id).where(
-                    UserWord.user_id == user.id,
-                    UserWord.word_id.in_([link.word_id for link in links]),
-                )
-            )
-        )
+    states = user_word_states(db, user, [link.word_id for link in links])
     return ArticleDetail(
         **card.model_dump(),
         author=article.author,
@@ -203,7 +211,7 @@ def get_article(article_id: int, db: DbSession, user: OptionalUser):
         bangla_summary=article.bangla_summary,
         exam_reason=article.exam_reason,
         vocabulary=[
-            word_out(link.word, context=link.context_sentence, saved=link.word_id in saved_words)
+            word_out(link.word, context=link.context_sentence, state=states.get(link.word_id))
             for link in links
         ],
         facts=[FactOut.model_validate(f) for f in article.facts],
@@ -261,16 +269,8 @@ def search(
         .order_by(Word.occurrences.desc(), Word.lemma)
         .limit(limit)
     ).all()
-    saved_words: set[int] = set()
-    if user and words:
-        saved_words = set(
-            db.scalars(
-                select(UserWord.word_id).where(
-                    UserWord.user_id == user.id, UserWord.word_id.in_([w.id for w in words])
-                )
-            )
-        )
+    states = user_word_states(db, user, [w.id for w in words])
     return SearchResponse(
         articles=article_cards(db, list(articles), user),
-        words=[word_out(w, saved=w.id in saved_words) for w in words],
+        words=[word_out(w, state=states.get(w.id)) for w in words],
     )
