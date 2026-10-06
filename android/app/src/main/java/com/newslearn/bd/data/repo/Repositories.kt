@@ -14,6 +14,8 @@ import com.newslearn.bd.data.remote.AttemptResultDto
 import com.newslearn.bd.data.remote.AttemptSummaryDto
 import com.newslearn.bd.data.remote.AuthApi
 import com.newslearn.bd.data.remote.CategoryDto
+import com.newslearn.bd.data.remote.CheckAnswerDto
+import com.newslearn.bd.data.remote.CheckAnswerRequest
 import com.newslearn.bd.data.remote.CreateQuizRequest
 import com.newslearn.bd.data.remote.CredentialsRequest
 import com.newslearn.bd.data.remote.DigestDto
@@ -161,8 +163,15 @@ class VocabularyRepository(private val api: ApiService) {
         }
     }
 
-    suspend fun review(wordId: Int, remembered: Boolean): Result<UserWordDto> =
-        apiCall { api.reviewWord(wordId, ReviewRequest(remembered)) }
+    /** [rating] is "forgot", "hard" or "good". */
+    suspend fun review(wordId: Int, rating: String): Result<UserWordDto> =
+        apiCall { api.reviewWord(wordId, ReviewRequest(rating)) }
+
+    /** "I know it": the word stops being highlighted and reviewed. */
+    suspend fun markKnown(wordId: Int): Result<Unit> = apiCall {
+        api.markKnown(wordId)
+        Unit
+    }
 }
 
 class LearnRepository(private val api: ApiService) {
@@ -198,6 +207,9 @@ class QuizRepository(private val api: ApiService) {
             )
         }
 
+    suspend fun check(quizId: Int, questionId: Int, selected: Int): Result<CheckAnswerDto> =
+        apiCall { api.checkAnswer(quizId, CheckAnswerRequest(questionId, selected)) }
+
     suspend fun history(): Result<List<AttemptSummaryDto>> = apiCall { api.attempts() }
 }
 
@@ -211,4 +223,7 @@ class ProfileRepository(private val api: ApiService) {
 
     suspend fun setPreferredCategories(categories: List<String>): Result<UserDto> =
         apiCall { api.updateProfile(UpdateProfileRequest(preferredCategories = categories)) }
+
+    suspend fun setGoals(articles: Int, words: Int): Result<UserDto> =
+        apiCall { api.updateProfile(UpdateProfileRequest(dailyArticleGoal = articles, dailyWordGoal = words)) }
 }

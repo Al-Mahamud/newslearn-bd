@@ -4,7 +4,7 @@ Python 3.12+ · FastAPI · SQLAlchemy 2 · PostgreSQL (SQLite for local developm
 APScheduler · Google Gen AI SDK or Anthropic SDK. Code is in [`backend/`](../backend); how to run it is in
 [`backend/README.md`](../backend/README.md).
 
-All seven phases below are implemented and covered by the test suite (35 tests, passing on
+All seven phases below are implemented and covered by the test suite (59 tests, passing on
 SQLite and PostgreSQL 18). What has **not** been exercised is listed under
 [Not yet verified](#not-yet-verified).
 
@@ -109,6 +109,17 @@ be built against these endpoints alone.
   or the source of a saved word; expired refresh tokens purged.
 - Registration switch (`REGISTRATION_OPEN`) and a production guard that refuses to start
   with the development JWT secret.
+
+### Additions for the redesigned app
+- Daily goals stored per user (`PATCH /me`); progress reports today's articles, new words
+  and quizzes against them.
+- `POST /quizzes/{id}/check`: the verdict and explanation for one answer, straight away.
+  Refused for mock exams, which stay exam-style.
+- Review ratings `forgot` / `hard` / `good`; `hard` returns tomorrow without promotion.
+- `PUT /vocabulary/{id}/known`: "I know it". Such words are not highlighted, reviewed or
+  counted as learned.
+- Words carry up to four synonyms (from the model or the analysis agent) and the number of
+  articles that used them.
 
 ## API summary
 

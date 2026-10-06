@@ -93,10 +93,12 @@ class ReviewViewModel(private val vocabulary: VocabularyRepository) : ViewModel(
 
     fun reveal() = updateSession { it.copy(revealed = true) }
 
-    fun answer(remembered: Boolean) {
+    /** [rating] is "forgot", "hard" or "good". */
+    fun answer(rating: String) {
         val word = (_state.value as? UiState.Success)?.data?.current ?: return
+        val remembered = rating != "forgot"
         viewModelScope.launch {
-            vocabulary.review(word.word.id, remembered).fold(
+            vocabulary.review(word.word.id, rating).fold(
                 onSuccess = {
                     updateSession { session ->
                         session.copy(
@@ -203,7 +205,7 @@ private fun androidx.compose.foundation.layout.ColumnScope.Flashcard(
     session: ReviewSession,
     speaker: Speaker,
     onReveal: () -> Unit,
-    onAnswer: (Boolean) -> Unit,
+    onAnswer: (String) -> Unit,
 ) {
     val colors = AppTheme.colors
     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -299,17 +301,21 @@ private fun androidx.compose.foundation.layout.ColumnScope.Flashcard(
 
     if (session.revealed) {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            OutlinedButton(
-                onClick = { onAnswer(false) },
-                modifier = Modifier.weight(1f).heightIn(min = 64.dp),
-                shape = MaterialTheme.shapes.medium,
-                border = BorderStroke(1.dp, colors.onPanelMuted),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.onPanel),
-            ) {
-                AnswerLabel("Forgot", "again today", colors.onPanelMuted)
+            listOf(Triple("forgot", "Forgot", "again today"), Triple("hard", "Hard", "tomorrow")).forEach { (rating, title, wait) ->
+                OutlinedButton(
+                    onClick = { onAnswer(rating) },
+                    modifier = Modifier.weight(1f).heightIn(min = 64.dp),
+                    shape = MaterialTheme.shapes.medium,
+                    border = BorderStroke(1.dp, colors.onPanelMuted),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.onPanel),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 6.dp),
+                ) {
+                    AnswerLabel(title, wait, colors.onPanelMuted)
+                }
             }
             Button(
-                onClick = { onAnswer(true) },
+                onClick = { onAnswer("good") },
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 6.dp),
                 modifier = Modifier.weight(1f).heightIn(min = 64.dp),
                 shape = MaterialTheme.shapes.medium,
                 colors = ButtonDefaults.buttonColors(containerColor = colors.highlight, contentColor = colors.onHighlight),

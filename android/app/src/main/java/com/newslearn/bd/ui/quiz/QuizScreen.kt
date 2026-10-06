@@ -52,6 +52,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.newslearn.bd.data.remote.AnswerReviewDto
 import com.newslearn.bd.data.remote.AttemptResultDto
+import com.newslearn.bd.data.remote.CheckAnswerDto
 import com.newslearn.bd.data.remote.QuestionDto
 import com.newslearn.bd.data.remote.QuizDto
 import com.newslearn.bd.data.repo.QuizRepository
@@ -76,6 +77,10 @@ data class QuizSession(
     /** question id -> chosen option */
     val answers: Map<Int, Int> = emptyMap(),
     val secondsLeft: Int? = null,
+    /** question id -> the server's verdict, for quizzes that give feedback as you go. */
+    val checked: Map<Int, CheckAnswerDto> = emptyMap(),
+    val checking: Boolean = false,
+    val checkError: String? = null,
     val submitting: Boolean = false,
     val submitError: String? = null,
     val result: AttemptResultDto? = null,
@@ -129,7 +134,27 @@ class QuizViewModel(private val quizId: Int, private val quizzes: QuizRepository
     }
 
     fun select(questionId: Int, option: Int) = updateSession {
-        if (it.result != null || it.submitting) it else it.copy(answers = it.answers + (questionId to option))
+        // An answer that has been checked is final.
+        if (it.result != null || it.submitting || questionId in it.checked) it
+        else it.copy(answers = it.answers + (questionId to option), checkError = null)
+    }
+
+    /** Asks the server whether the chosen answer to [questionId] is right. */
+    fun check(questionId: Int) {
+        val current = session() ?: return
+        val selected = current.answers[questionId] ?: return
+        if (current.checking || questionId in current.checked) return
+        updateSession { it.copy(checking = true, checkError = null) }
+        viewModelScope.launch {
+            quizzes.check(quizId, questionId, selected).fold(
+                onSuccess = { verdict ->
+                    updateSession { it.copy(checking = false, checked = it.checked + (questionId to verdict)) }
+                },
+                onFailure = { error ->
+                    updateSession { it.copy(checking = false, checkError = error.userMessage()) }
+                },
+            )
+        }
     }
 
     fun submit() {
@@ -163,7 +188,7 @@ fun QuizScreen(quizId: Int, onBack: () -> Unit, onOpenArticle: (Int) -> Unit) {
                 if (result != null) {
                     ResultList(session.quiz.title, result, onOpenArticle, onBack)
                 } else {
-                    QuestionPager(session, viewModel::select, viewModel::submit, onBack)
+                    QuestionPager(session, viewModel::select, viewModel::check, viewModel::submit, onBack, onOpenArticle)
                 }
             }
         }
@@ -174,14 +199,19 @@ fun QuizScreen(quizId: Int, onBack: () -> Unit, onOpenArticle: (Int) -> Unit) {
 private fun QuestionPager(
     session: QuizSession,
     onSelect: (Int, Int) -> Unit,
+    onCheck: (Int) -> Unit,
     onSubmit: () -> Unit,
     onLeave: () -> Unit,
+    onOpenArticle: (Int) -> Unit,
 ) {
     val questions = session.quiz.questions
     var index by rememberSaveable { mutableIntStateOf(0) }
     val question = questions.getOrNull(index) ?: return
     val isLast = index == questions.lastIndex
     val unanswered = questions.size - session.answers.size
+    val verdict = session.checked[question.id]
+    // In a quiz with feedback, a chosen answer is checked before moving on.
+    val needsCheck = session.quiz.instantFeedback && question.id in session.answers && verdict == null
 
     Column(
         Modifier.fillMaxSize().padding(start = 20.dp, end = 20.dp, bottom = 20.dp),
@@ -203,6 +233,7 @@ private fun QuestionPager(
                             .background(
                                 when {
                                     i == index -> MaterialTheme.colorScheme.onSurface
+                                    session.checked[q.id]?.correct == false -> MaterialTheme.colorScheme.error
                                     q.id in session.answers -> MaterialTheme.colorScheme.primary
                                     else -> MaterialTheme.colorScheme.outline
                                 },
@@ -251,13 +282,32 @@ private fun QuestionPager(
                 }
                 Text(question.text, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold))
             }
-            Options(question, selected = session.answers[question.id], enabled = !session.submitting) {
-                onSelect(question.id, it)
+            Options(
+                question = question,
+                selected = session.answers[question.id],
+                verdict = verdict,
+                enabled = !session.submitting && !session.checking && verdict == null,
+            ) { onSelect(question.id, it) }
+
+            if (verdict != null) {
+                ContentCard(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(
+                            if (verdict.correct) "Correct" else "Not quite",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = if (verdict.correct) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                        )
+                        if (verdict.explanation.isNotBlank()) {
+                            Text(verdict.explanation, style = MaterialTheme.typography.bodyMedium)
+                        }
+                        TextButton(onClick = { onOpenArticle(verdict.articleId) }) { Text("Read the article") }
+                    }
+                }
             }
         }
 
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            session.submitError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+            (session.submitError ?: session.checkError)?.let { Text(it, color = MaterialTheme.colorScheme.error) }
             if (isLast && unanswered > 0) {
                 Text(
                     if (unanswered == 1) "1 question is not answered." else "$unanswered questions are not answered.",
@@ -274,8 +324,14 @@ private fun QuestionPager(
                     ) { Text("Back") }
                 }
                 Button(
-                    onClick = { if (isLast) onSubmit() else index += 1 },
-                    enabled = !session.submitting,
+                    onClick = {
+                        when {
+                            needsCheck -> onCheck(question.id)
+                            isLast -> onSubmit()
+                            else -> index += 1
+                        }
+                    },
+                    enabled = !session.submitting && !session.checking,
                     modifier = Modifier.weight(1f).heightIn(min = 54.dp),
                     shape = MaterialTheme.shapes.medium,
                     colors = ButtonDefaults.buttonColors(
@@ -285,7 +341,9 @@ private fun QuestionPager(
                 ) {
                     Text(
                         when {
-                            session.submitting -> "Checking…"
+                            session.submitting || session.checking -> "Checking…"
+                            needsCheck -> "Check answer"
+                            isLast && session.quiz.instantFeedback -> "Finish"
                             isLast -> "Finish and see answers"
                             question.id in session.answers -> "Next question"
                             else -> "Skip"
@@ -298,17 +356,33 @@ private fun QuestionPager(
 }
 
 @Composable
-private fun Options(question: QuestionDto, selected: Int?, enabled: Boolean, onSelect: (Int) -> Unit) {
+private fun Options(
+    question: QuestionDto,
+    selected: Int?,
+    verdict: CheckAnswerDto?,
+    enabled: Boolean,
+    onSelect: (Int) -> Unit,
+) {
     Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         question.options.forEachIndexed { optionIndex, option ->
             val isSelected = selected == optionIndex
+            // Once checked: the right answer turns green, a wrong pick turns red.
+            val isAnswer = verdict != null && optionIndex == verdict.correctIndex
+            val isWrongPick = verdict != null && isSelected && !verdict.correct
+            val accent = when {
+                isAnswer -> MaterialTheme.colorScheme.primary
+                isWrongPick -> MaterialTheme.colorScheme.error
+                isSelected -> MaterialTheme.colorScheme.primary
+                else -> null
+            }
             Surface(
                 shape = MaterialTheme.shapes.medium,
-                color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLowest,
-                border = BorderStroke(
-                    if (isSelected) 2.dp else 1.dp,
-                    if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-                ),
+                color = when {
+                    isWrongPick -> MaterialTheme.colorScheme.errorContainer
+                    isAnswer || (isSelected && verdict == null) -> MaterialTheme.colorScheme.primaryContainer
+                    else -> MaterialTheme.colorScheme.surfaceContainerLowest
+                },
+                border = BorderStroke(if (accent != null) 2.dp else 1.dp, accent ?: MaterialTheme.colorScheme.outline),
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(MaterialTheme.shapes.medium)
@@ -327,21 +401,30 @@ private fun Options(question: QuestionDto, selected: Int?, enabled: Boolean, onS
                     Box(
                         Modifier
                             .size(32.dp)
-                            .background(
-                                if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                                RoundedCornerShape(10.dp),
-                            ),
+                            .background(accent ?: MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(10.dp)),
                         contentAlignment = Alignment.Center,
                     ) {
-                        if (isSelected) {
-                            Icon(
+                        when {
+                            // A tick and a cross, so right and wrong do not rely on colour alone.
+                            isWrongPick -> Icon(
+                                Icons.Default.Close,
+                                contentDescription = "Your answer, incorrect",
+                                tint = MaterialTheme.colorScheme.onError,
+                                modifier = Modifier.size(18.dp),
+                            )
+                            isAnswer -> Icon(
+                                Icons.Default.Check,
+                                contentDescription = "Correct answer",
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(18.dp),
+                            )
+                            isSelected -> Icon(
                                 Icons.Default.Check,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.onPrimary,
                                 modifier = Modifier.size(18.dp),
                             )
-                        } else {
-                            Text(
+                            else -> Text(
                                 Letters.getOrElse(optionIndex) { "" },
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                             )
@@ -350,7 +433,7 @@ private fun Options(question: QuestionDto, selected: Int?, enabled: Boolean, onS
                     Text(
                         option,
                         style = MaterialTheme.typography.bodyLarge.copy(
-                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                            fontWeight = if (isSelected || isAnswer) FontWeight.SemiBold else FontWeight.Normal,
                         ),
                     )
                 }

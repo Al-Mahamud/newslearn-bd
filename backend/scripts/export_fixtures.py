@@ -52,6 +52,8 @@ with TestClient(app) as c:
     save("quiz", q)
     save("quiz_timed", c.post(f"{A}/quizzes", headers=h, json={"kind": "mock"}))
     qq = q.json()
+    save("check", c.post(f"{A}/quizzes/{qq['id']}/check", headers=h, json={"question_id": qq["questions"][0]["id"], "selected_index": 0}))
+    save("check_wrong", c.post(f"{A}/quizzes/{qq['id']}/check", headers=h, json={"question_id": qq["questions"][0]["id"], "selected_index": 2}))
     save("attempt", c.post(f"{A}/quizzes/{qq['id']}/attempts", headers=h, json={"answers": [{"question_id": qq["questions"][0]["id"], "selected_index": 0}], "duration_seconds": 5}))
     save("attempts", c.get(f"{A}/me/quiz-attempts", headers=h))
     c.post(f"{A}/articles/1/read", headers=h)

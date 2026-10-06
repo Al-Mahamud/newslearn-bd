@@ -85,7 +85,7 @@ The API address is a build setting. The default, `http://10.0.2.2:8000/`, reache
 running on the same computer as the Android emulator. For a phone or a deployed server set
 `newslearn.apiBaseUrl=https://…/` in `android/local.properties`.
 
-## Redesign (version 0.2.0)
+## Redesign (versions 0.2.0 and 0.3.0)
 
 The look and the five main screens were rebuilt from the design canvas: deep green with an
 amber accent, Bricolage Grotesque for headlines, Hind Siliguri for body text (one face for
@@ -101,13 +101,21 @@ Bangla and English).
   explanations after finishing.
 - **Progress**: the week's streak, totals, accuracy by topic, and practice on the weakest.
 
-Step 2, which needs backend changes first: adjustable daily goals, feedback straight after
-each quiz answer, "seen in N articles" and similar words, a "Hard" review answer, and
-"I know it" for words.
+Version 0.3.0 added the parts that needed backend support:
+
+- **Daily goal you set yourself**: targets for articles and new words (Progress screen);
+  the Today ring gives a third each to articles, new words and the day's quiz.
+- **Answers as you go**: daily, weekly, topic and article quizzes check each answer when
+  you tap "Check answer" and show the explanation. Mock exams still reveal answers only
+  at the end.
+- **Word panel**: similar words, how many articles have used the word, and "I know it",
+  which stops a word being highlighted or reviewed.
+- **Review**: a third answer, "Hard", which brings the word back tomorrow without moving
+  it forward.
 
 `ScreensTest` draws each of these screens on the JVM with responses captured from the real
-backend and walks its main path (open a pick, tap a word and save it, review a word,
-finish a quiz).
+backend and walks its main paths: open a pick, tap a word and save it or mark it known,
+review a word, check quiz answers one by one, change the daily goal.
 
 ## Not yet verified
 

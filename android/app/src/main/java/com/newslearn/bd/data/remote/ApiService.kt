@@ -76,6 +76,9 @@ interface ApiService {
     @PUT("api/v1/vocabulary/{id}")
     suspend fun saveWord(@Path("id") id: Int, @Body body: SaveWordRequest): UserWordDto
 
+    @PUT("api/v1/vocabulary/{id}/known")
+    suspend fun markKnown(@Path("id") id: Int): UserWordDto
+
     @DELETE("api/v1/vocabulary/{id}")
     suspend fun removeWord(@Path("id") id: Int)
 
@@ -109,6 +112,9 @@ interface ApiService {
 
     @GET("api/v1/quizzes/{id}")
     suspend fun quiz(@Path("id") id: Int): QuizDto
+
+    @POST("api/v1/quizzes/{id}/check")
+    suspend fun checkAnswer(@Path("id") id: Int, @Body body: CheckAnswerRequest): CheckAnswerDto
 
     @POST("api/v1/quizzes/{id}/attempts")
     suspend fun submitQuiz(@Path("id") id: Int, @Body body: SubmitQuizRequest): AttemptResultDto

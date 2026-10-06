@@ -16,7 +16,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -108,6 +115,13 @@ class ProfileViewModel(
         val current = (_state.value as? UiState.Success)?.data?.user?.preferredCategories ?: return
         val updated = if (slug in current) current - slug else current + slug
         viewModelScope.launch { applyUser(profile.setPreferredCategories(updated)) }
+    }
+
+    /** Changes the daily targets; the Today screen's ring follows them. */
+    fun setGoals(articles: Int, words: Int) {
+        viewModelScope.launch {
+            applyUser(profile.setGoals(articles.coerceIn(1, 20), words.coerceIn(1, 30)))
+        }
     }
 
     fun practise(category: String) {
@@ -202,6 +216,18 @@ fun ProfileScreen(onOpenQuiz: (Int) -> Unit) {
                             ),
                             modifier = Modifier.heightIn(min = 44.dp),
                         ) { Text(if (data.startingQuiz) "Starting…" else "Practise") }
+                    }
+                }
+            }
+
+            SectionTitle("Daily goal")
+            ContentCard(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                    GoalStepper("Articles to read", data.user.dailyArticleGoal, 1..20) {
+                        viewModel.setGoals(it, data.user.dailyWordGoal)
+                    }
+                    GoalStepper("New words to save", data.user.dailyWordGoal, 1..30) {
+                        viewModel.setGoals(data.user.dailyArticleGoal, it)
                     }
                 }
             }
@@ -313,6 +339,25 @@ private fun TopicAccuracy(topics: List<TopicAccuracyDto>) {
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun GoalStepper(label: String, value: Int, range: IntRange, onChange: (Int) -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+        IconButton(onClick = { onChange(value - 1) }, enabled = value > range.first) {
+            Icon(Icons.Default.Remove, contentDescription = "Fewer: $label")
+        }
+        Text(
+            "$value",
+            style = MaterialTheme.typography.titleMedium,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.width(32.dp),
+        )
+        IconButton(onClick = { onChange(value + 1) }, enabled = value < range.last) {
+            Icon(Icons.Default.Add, contentDescription = "More: $label")
         }
     }
 }

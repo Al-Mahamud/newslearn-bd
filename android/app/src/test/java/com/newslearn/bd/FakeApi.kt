@@ -7,6 +7,8 @@ import com.newslearn.bd.data.remote.ArticlePageDto
 import com.newslearn.bd.data.remote.AttemptResultDto
 import com.newslearn.bd.data.remote.AttemptSummaryDto
 import com.newslearn.bd.data.remote.CategoryDto
+import com.newslearn.bd.data.remote.CheckAnswerDto
+import com.newslearn.bd.data.remote.CheckAnswerRequest
 import com.newslearn.bd.data.remote.CreateQuizRequest
 import com.newslearn.bd.data.remote.DigestDto
 import com.newslearn.bd.data.remote.ExplainRequest
@@ -29,7 +31,13 @@ import com.newslearn.bd.data.remote.UserWordDto
  */
 class FakeApi : ApiService {
     val savedWords = mutableListOf<Int>()
-    val reviews = mutableListOf<Pair<Int, Boolean>>()
+    val knownWords = mutableListOf<Int>()
+    val reviews = mutableListOf<Pair<Int, String>>()
+    val checks = mutableListOf<CheckAnswerRequest>()
+    var goals: Pair<Int?, Int?>? = null
+
+    /** When set, served instead of the daily quiz (e.g. a mock exam). */
+    var quizOverride: QuizDto? = null
     var submitted: SubmitQuizRequest? = null
 
     private inline fun <reified T> fixture(name: String): T {
@@ -38,7 +46,16 @@ class FakeApi : ApiService {
     }
 
     override suspend fun me(): UserDto = fixture("user")
-    override suspend fun updateProfile(body: UpdateProfileRequest): UserDto = fixture("user")
+    override suspend fun updateProfile(body: UpdateProfileRequest): UserDto {
+        if (body.dailyArticleGoal != null || body.dailyWordGoal != null) {
+            goals = body.dailyArticleGoal to body.dailyWordGoal
+        }
+        val user = fixture<UserDto>("user")
+        return user.copy(
+            dailyArticleGoal = body.dailyArticleGoal ?: user.dailyArticleGoal,
+            dailyWordGoal = body.dailyWordGoal ?: user.dailyWordGoal,
+        )
+    }
     override suspend fun progress(): ProgressDto = fixture("progress")
     override suspend fun categories(): List<CategoryDto> = fixture("categories")
 
@@ -66,12 +83,17 @@ class FakeApi : ApiService {
         return fixture("user_word")
     }
 
+    override suspend fun markKnown(id: Int): UserWordDto {
+        knownWords += id
+        return fixture("user_word")
+    }
+
     override suspend fun removeWord(id: Int) {
         savedWords -= id
     }
 
     override suspend fun reviewWord(id: Int, body: ReviewRequest): UserWordDto {
-        reviews += id to body.remembered
+        reviews += id to body.rating
         return fixture("user_word")
     }
 
@@ -83,7 +105,14 @@ class FakeApi : ApiService {
     override suspend fun weeklyQuiz(): QuizDto = fixture("quiz")
     override suspend fun createQuiz(body: CreateQuizRequest): QuizDto = fixture("quiz_timed")
     override suspend fun articleQuiz(id: Int): QuizDto = fixture("quiz")
-    override suspend fun quiz(id: Int): QuizDto = fixture("quiz")
+    override suspend fun quiz(id: Int): QuizDto = quizOverride ?: fixture("quiz")
+
+    /** Mirrors the mock backend's questions, whose first option is always the right one. */
+    override suspend fun checkAnswer(id: Int, body: CheckAnswerRequest): CheckAnswerDto {
+        checks += body
+        val verdict = fixture<CheckAnswerDto>(if (body.selectedIndex == 0) "check" else "check_wrong")
+        return verdict.copy(questionId = body.questionId)
+    }
 
     override suspend fun submitQuiz(id: Int, body: SubmitQuizRequest): AttemptResultDto {
         submitted = body

@@ -6,7 +6,7 @@
    "source": "Test Times",
    "url": "https://example.com/0",
    "image_url": null,
-   "published_at": "2026-10-06T22:59:08.488876Z",
+   "published_at": "2026-10-06T23:03:23.872217Z",
    "category": "economy",
    "summary": "[mock] Bangladesh Bank said inflation fell to 8.5% in September as sluggish credit growth limited spending. The government expects remittance inflows to strengthen reserves.",
    "exam_importance": 70,
@@ -21,7 +21,7 @@
    "source": "Test Times",
    "url": "https://example.com/1",
    "image_url": "https://example.com/i.jpg",
-   "published_at": "2026-10-06T22:58:08.504676Z",
+   "published_at": "2026-10-06T23:02:23.887020Z",
    "category": "economy",
    "summary": "[mock] Bangladesh Bank said inflation fell to 8.5% in September as sluggish credit growth limited spending. The government expects remittance inflows to strengthen reserves.",
    "exam_importance": 70,
@@ -31,5 +31,5 @@
    "read": false
   }
  ],
- "next_cursor": "MjAyNi0xMC0wNlQyMjo1ODowOC41MDQ2NzYrMDA6MDB8Mg=="
+ "next_cursor": "MjAyNi0xMC0wNlQyMzowMjoyMy44ODcwMjArMDA6MDB8Mg=="
 }

@@ -100,14 +100,40 @@ class ArticleViewModel(
         }
     }
 
-    /** Saves every word of this article that is not saved yet. */
+    /** Saves every word of this article that is neither saved nor marked as known. */
     fun saveAllWords() {
-        val unsaved = (_article.value as? UiState.Success)?.data?.vocabulary.orEmpty().filterNot { it.saved }
+        val unsaved = (_article.value as? UiState.Success)?.data?.vocabulary.orEmpty()
+            .filterNot { it.saved || it.known }
         unsaved.forEach(::toggleWord)
     }
 
+    /** "I know it": the word is no longer highlighted or offered for review. */
+    fun markKnown(word: WordDto) {
+        val before = word
+        setWordState(word.id, saved = false, known = true)
+        viewModelScope.launch {
+            vocabulary.markKnown(word.id).onFailure { error ->
+                setWordState(word.id, saved = before.saved, known = before.known)
+                _events.tryEmit(ArticleEvent.Message(error.userMessage()))
+            }
+        }
+    }
+
+    private fun setWordState(wordId: Int, saved: Boolean, known: Boolean) = updateArticle { article ->
+        article.copy(
+            vocabulary = article.vocabulary.map {
+                if (it.id == wordId) it.copy(saved = saved, known = known) else it
+            },
+        )
+    }
+
     private fun setWordSaved(wordId: Int, saved: Boolean) = updateArticle { article ->
-        article.copy(vocabulary = article.vocabulary.map { if (it.id == wordId) it.copy(saved = saved) else it })
+        // Saving a word the reader had marked as known turns it back into a word to learn.
+        article.copy(
+            vocabulary = article.vocabulary.map {
+                if (it.id == wordId) it.copy(saved = saved, known = if (saved) false else it.known) else it
+            },
+        )
     }
 
     fun explain(sentence: String) {

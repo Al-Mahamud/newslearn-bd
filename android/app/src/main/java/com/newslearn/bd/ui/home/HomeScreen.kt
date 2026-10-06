@@ -79,9 +79,6 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-/** How many articles a day the summary ring counts towards. */
-const val DAILY_ARTICLE_GOAL = 5
-
 /** One of the day's most exam-relevant stories, with the reason it was chosen. */
 data class Pick(
     val id: Int,
@@ -358,9 +355,15 @@ private fun TopPicksList(
 
 @Composable
 private fun DailySummary(progress: ProgressDto?) {
-    val read = progress?.articlesReadToday ?: 0
-    val quizDone = (progress?.last7Days?.lastOrNull()?.quizzesTaken ?: 0) > 0
-    val percent = (read * 100 / DAILY_ARTICLE_GOAL).coerceAtMost(100)
+    // Each of the three goals counts for a third of the ring.
+    val articleGoal = progress?.dailyArticleGoal ?: 5
+    val wordGoal = progress?.dailyWordGoal ?: 5
+    val read = (progress?.articlesReadToday ?: 0).coerceAtMost(articleGoal)
+    val words = (progress?.wordsSavedToday ?: 0).coerceAtMost(wordGoal)
+    val quizDone = (progress?.quizzesToday ?: 0) > 0
+    val fraction = (read.toFloat() / articleGoal + words.toFloat() / wordGoal + (if (quizDone) 1f else 0f)) / 3f
+    val percent = (fraction * 100).toInt()
+
     Panel(Modifier.fillMaxWidth()) {
         Row(
             Modifier.padding(18.dp),
@@ -368,27 +371,24 @@ private fun DailySummary(progress: ProgressDto?) {
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             ProgressRing(
-                fraction = read.toFloat() / DAILY_ARTICLE_GOAL,
+                fraction = if (progress == null) 0f else fraction,
                 centerText = if (progress == null) "–" else "$percent%",
                 caption = "of goal",
-                description = "$read of $DAILY_ARTICLE_GOAL articles read today",
+                description = "Daily goal $percent percent complete",
             )
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("Today", style = MaterialTheme.typography.titleMedium)
+                Text("Daily goal", style = MaterialTheme.typography.titleMedium)
                 // A dash until the numbers load, rather than a zero that might be wrong.
-                SummaryRow(
-                    "Articles read",
-                    if (progress == null) "–" else "${read.coerceAtMost(DAILY_ARTICLE_GOAL)} of $DAILY_ARTICLE_GOAL",
-                )
-                SummaryRow(
-                    "Words to review",
-                    when (progress?.wordsDue) {
-                        null -> "–"
-                        0 -> "None due"
-                        else -> "${progress.wordsDue}"
-                    },
-                )
+                SummaryRow("Articles", if (progress == null) "–" else "$read of $articleGoal")
+                SummaryRow("New words", if (progress == null) "–" else "$words of $wordGoal")
                 SummaryRow("Quiz", if (progress == null) "–" else if (quizDone) "Done" else "Not yet")
+                if (progress != null && progress.wordsDue > 0) {
+                    Text(
+                        "${progress.wordsDue} word${if (progress.wordsDue == 1) "" else "s"} due for review",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = AppTheme.colors.highlight,
+                    )
+                }
             }
         }
     }

@@ -3,6 +3,8 @@ package com.newslearn.bd.ui.article
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -185,7 +187,15 @@ fun ArticleScreen(articleId: Int, onBack: () -> Unit, onOpenQuiz: (Int) -> Unit)
     // Looked up by id so the sheet reflects the word's latest saved state.
     article?.vocabulary?.firstOrNull { it.id == openWordId }?.let { word ->
         ModalBottomSheet(onDismissRequest = { openWordId = null }) {
-            WordSheet(word, speaker, onToggleSave = { viewModel.toggleWord(word) })
+            WordSheet(
+                word = word,
+                speaker = speaker,
+                onToggleSave = { viewModel.toggleWord(word) },
+                onKnown = {
+                    viewModel.markKnown(word)
+                    openWordId = null
+                },
+            )
         }
     }
 
@@ -299,7 +309,7 @@ private fun ArticleContent(
             if (article.vocabulary.isNotEmpty()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Words to learn", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-                    val unsaved = article.vocabulary.count { !it.saved }
+                    val unsaved = article.vocabulary.count { !it.saved && !it.known }
                     if (unsaved > 0) {
                         TextButton(onClick = onSaveAll) { Text(if (unsaved == 1) "Save 1" else "Save all $unsaved") }
                     }
@@ -342,8 +352,9 @@ private fun StudyText(
     val mark = SpanStyle(background = AppTheme.colors.wordMark, fontWeight = FontWeight.Medium)
 
     val annotated = remember(text, words, mark) {
-        // Longer entries first, so a phrase wins over a word inside it.
-        val patterns = words.sortedByDescending { it.word.length }.map { word ->
+        // Longer entries first, so a phrase wins over a word inside it. Words the reader
+        // already knows are left unmarked.
+        val patterns = words.filterNot { it.known }.sortedByDescending { it.word.length }.map { word ->
             word to Regex("\\b" + Regex.escape(word.word) + "\\w*", RegexOption.IGNORE_CASE)
         }
         buildAnnotatedString {
@@ -450,9 +461,9 @@ private fun WordTile(word: WordDto, modifier: Modifier = Modifier, onClick: () -
                     )
                 }
             }
-            if (word.partOfSpeech.isNotBlank()) {
+            if (word.known || word.partOfSpeech.isNotBlank()) {
                 Text(
-                    word.partOfSpeech,
+                    if (word.known) "You know this" else word.partOfSpeech,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -472,7 +483,8 @@ private val DifficultyLabels = mapOf(1 to "easy", 2 to "medium", 3 to "hard")
 
 /** Everything about one word, shown when it is tapped. */
 @Composable
-fun WordSheet(word: WordDto, speaker: Speaker, onToggleSave: () -> Unit) {
+@OptIn(ExperimentalLayoutApi::class)
+fun WordSheet(word: WordDto, speaker: Speaker, onToggleSave: () -> Unit, onKnown: (() -> Unit)? = null) {
     Column(
         Modifier
             .fillMaxWidth()
@@ -486,8 +498,12 @@ fun WordSheet(word: WordDto, speaker: Speaker, onToggleSave: () -> Unit) {
             Column(Modifier.weight(1f)) {
                 Text(word.word, style = MaterialTheme.typography.headlineLarge)
                 Text(
-                    listOfNotNull(word.partOfSpeech.takeIf { it.isNotBlank() }, DifficultyLabels[word.difficulty])
-                        .joinToString(" · "),
+                    listOfNotNull(
+                        word.partOfSpeech.takeIf { it.isNotBlank() },
+                        DifficultyLabels[word.difficulty],
+                        // Only worth saying once it has turned up more than once.
+                        "seen in ${word.seenIn} articles".takeIf { word.seenIn > 1 },
+                    ).joinToString(" · "),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -524,13 +540,52 @@ fun WordSheet(word: WordDto, speaker: Speaker, onToggleSave: () -> Unit) {
                 )
             }
         }
-        if (word.saved) {
-            OutlinedButton(onClick = onToggleSave, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) {
+        if (word.synonyms.isNotEmpty()) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                SectionLabel("Similar words", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    word.synonyms.forEach { synonym ->
+                        Surface(
+                            shape = androidx.compose.foundation.shape.CircleShape,
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                            color = MaterialTheme.colorScheme.surfaceContainerLowest,
+                        ) {
+                            Text(
+                                synonym,
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        when {
+            word.saved -> OutlinedButton(onClick = onToggleSave, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) {
                 Text("Saved — remove from my words")
             }
-        } else {
-            Button(onClick = onToggleSave, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) {
-                Text("Save to my words")
+            word.known -> Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    "You marked this as a word you know.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                OutlinedButton(onClick = onToggleSave, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) {
+                    Text("Learn it after all")
+                }
+            }
+            else -> Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Button(onClick = onToggleSave, modifier = Modifier.weight(1f).heightIn(min = 52.dp)) {
+                    Text("Save to my words")
+                }
+                if (onKnown != null) {
+                    OutlinedButton(onClick = onKnown, modifier = Modifier.heightIn(min = 52.dp)) {
+                        Text("I know it")
+                    }
+                }
             }
         }
     }

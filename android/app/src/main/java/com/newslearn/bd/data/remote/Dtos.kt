@@ -21,6 +21,8 @@ data class UserDto(
     val displayName: String = "",
     val englishLevel: String = "intermediate",
     val preferredCategories: List<String> = emptyList(),
+    val dailyArticleGoal: Int = 5,
+    val dailyWordGoal: Int = 5,
     val isAdmin: Boolean = false,
 )
 
@@ -32,6 +34,8 @@ data class UpdateProfileRequest(
     val displayName: String? = null,
     val englishLevel: String? = null,
     val preferredCategories: List<String>? = null,
+    val dailyArticleGoal: Int? = null,
+    val dailyWordGoal: Int? = null,
 )
 
 // --- articles ---
@@ -70,6 +74,11 @@ data class WordDto(
     val difficulty: Int = 2,
     val contextSentence: String = "",
     val saved: Boolean = false,
+    /** The reader marked it "I know it": not highlighted, not reviewed. */
+    val known: Boolean = false,
+    val synonyms: List<String> = emptyList(),
+    /** How many articles have used this word. */
+    val seenIn: Int = 0,
 )
 
 @Serializable
@@ -119,8 +128,9 @@ data class UserWordDto(
     val reviewCount: Int = 0,
 )
 
+/** [rating] is "forgot", "hard" or "good". */
 @Serializable
-data class ReviewRequest(val remembered: Boolean)
+data class ReviewRequest(val rating: String)
 
 // --- learning ---
 
@@ -190,7 +200,21 @@ data class QuizDto(
     val kind: String,
     val title: String,
     val timeLimitSeconds: Int? = null,
+    /** False for mock exams, where answers are shown only at the end. */
+    val instantFeedback: Boolean = false,
     val questions: List<QuestionDto> = emptyList(),
+)
+
+@Serializable
+data class CheckAnswerRequest(val questionId: Int, val selectedIndex: Int)
+
+@Serializable
+data class CheckAnswerDto(
+    val questionId: Int,
+    val correct: Boolean,
+    val correctIndex: Int,
+    val explanation: String = "",
+    val articleId: Int = 0,
 )
 
 @Serializable
@@ -263,6 +287,10 @@ data class ProgressDto(
     val wordsSaved: Int = 0,
     val wordsLearned: Int = 0,
     val wordsDue: Int = 0,
+    val wordsSavedToday: Int = 0,
+    val quizzesToday: Int = 0,
+    val dailyArticleGoal: Int = 5,
+    val dailyWordGoal: Int = 5,
     val quizzesTaken: Int = 0,
     val averageScorePercent: Int = 0,
     val topics: List<TopicAccuracyDto> = emptyList(),

@@ -8,8 +8,8 @@
  "time_limit_seconds": 135,
  "questions": [
   {
-   "id": 3,
-   "text": "[mock] Which publisher reported: \"Inflation eases, report 2\"?",
+   "id": 1,
+   "text": "[mock] Which publisher reported: \"Inflation eases, report 0\"?",
    "options": [
     "Test Times",
     "Example Times",
@@ -17,7 +17,7 @@
     "Placeholder Post"
    ],
    "category": "economy",
-   "article_id": 3
+   "article_id": 1
   },
   {
    "id": 2,
@@ -32,8 +32,8 @@
    "article_id": 2
   },
   {
-   "id": 1,
-   "text": "[mock] Which publisher reported: \"Inflation eases, report 0\"?",
+   "id": 3,
+   "text": "[mock] Which publisher reported: \"Inflation eases, report 2\"?",
    "options": [
     "Test Times",
     "Example Times",
@@ -41,7 +41,7 @@
     "Placeholder Post"
    ],
    "category": "economy",
-   "article_id": 1
+   "article_id": 3
   }
  ]
 }
