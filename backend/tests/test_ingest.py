@@ -1,5 +1,7 @@
 import json
 
+import pytest
+
 from app.cli import main
 from app.models import Article
 from app.services import ingest as ingest_service
@@ -161,6 +163,12 @@ def test_send_explains_a_missing_folder_and_a_missing_database(tmp_path, capsys)
     assert main(["send", "--dir", str(tmp_path), "--local"]) == 1
     assert "Folders that exist: 2026-01-01" in capsys.readouterr().err
 
+
+def test_send_refuses_a_local_database_unless_asked(tmp_path, capsys):
+    from app.db import engine
+
+    if engine.dialect.name != "sqlite":
+        pytest.skip("the guard only applies when no online database is configured")
     # Without --local, a SQLite database means the online one was never configured.
     assert main(["send", "--dir", str(tmp_path)]) == 2
     assert "DATABASE_URL=postgresql://" in capsys.readouterr().err
