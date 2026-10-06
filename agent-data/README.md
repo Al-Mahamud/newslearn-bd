@@ -3,8 +3,9 @@
 The hand-over point between the analysis agent and the database.
 
 1. The **analysis agent** reads the newspapers and writes its results here, in a folder
-   named with the date: `agent-data/2026-10-07/anything.json`. The format it must follow
-   is in [`FORMAT.md`](FORMAT.md); a working example is [`example.json`](example.json).
+   named with the date: `agent-data/2026-10-07/anything.json`. Give it three files:
+   [`ANALYSIS.md`](ANALYSIS.md) (how to analyse the paper), [`FORMAT.md`](FORMAT.md)
+   (the shape of the output) and [`example.json`](example.json) (a working example).
 2. **You** run the sender from the project folder:
 
    ```bash

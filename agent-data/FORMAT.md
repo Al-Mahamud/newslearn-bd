@@ -2,7 +2,8 @@
 
 Give this file to the analysis agent. It describes exactly what to produce so the news can
 be sent to the NewsLearn BD database. A complete, valid example is in
-[`example.json`](example.json).
+[`example.json`](example.json). How to choose and analyse the news is in
+[`ANALYSIS.md`](ANALYSIS.md).
 
 ## Where to save
 

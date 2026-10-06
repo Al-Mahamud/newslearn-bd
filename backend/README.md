@@ -86,7 +86,8 @@ tests/
 ## Analyst agent
 
 A separate AI agent can read the day's papers and write study notes as JSON files into
-`../agent-data/<date>/`. The format is [`../agent-data/FORMAT.md`](../agent-data/FORMAT.md).
+`../agent-data/<date>/`. Its method is [`../agent-data/ANALYSIS.md`](../agent-data/ANALYSIS.md)
+and the output format is [`../agent-data/FORMAT.md`](../agent-data/FORMAT.md).
 `../send-news` then validates those files and stores them here through the pipeline's own
 code. It needs `DATABASE_URL` (the Neon string) in `backend/.env`.
 
