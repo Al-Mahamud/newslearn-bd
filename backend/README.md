@@ -85,18 +85,10 @@ tests/
 
 ## Analyst agent
 
-An AI agent on your own computer can read the day's papers, choose what matters for your
-exams, and store its study notes here. Its brief is [`../docs/ANALYST_AGENT.md`](../docs/ANALYST_AGENT.md).
-It writes through one validated command:
-
-```bash
-python -m app.cli recent --days 2                  # what the app already has
-python -m app.cli ingest agent-output/2026-10-07.json --dry-run
-python -m app.cli ingest agent-output/2026-10-07.json
-```
-
-To make that write to the hosted database, put its address in `backend/.env`:
-`DATABASE_URL=postgresql://...` (the same Neon string used on GitHub and Render).
+A separate AI agent can read the day's papers and write study notes as JSON files into
+`../agent-data/<date>/`. The format is [`../agent-data/FORMAT.md`](../agent-data/FORMAT.md).
+`../send-news` then validates those files and stores them here through the pipeline's own
+code. It needs `DATABASE_URL` (the Neon string) in `backend/.env`.
 
 ## Sources and copyright
 

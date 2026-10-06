@@ -12,6 +12,68 @@ from app.models import User
 from app.security import hash_password
 
 
+def _send(db, args) -> int:
+    import re
+    from datetime import datetime
+    from pathlib import Path
+
+    from sqlalchemy.engine import make_url
+
+    from app.config import get_settings
+    from app.services import ingest as ingest_service
+
+    settings = get_settings()
+    url = make_url(settings.database_url)
+    if url.get_backend_name() == "sqlite" and not args.local:
+        print(
+            "No online database is configured, so nothing would reach the app.\n"
+            "Create backend/.env containing one line:\n"
+            "  DATABASE_URL=postgresql://...   (your Neon connection string)\n"
+            "(Use --local to send to the local test database on purpose.)",
+            file=sys.stderr,
+        )
+        return 2
+
+    data_dir = Path(args.dir) if args.dir else ingest_service.DATA_DIR
+    dated = sorted(
+        p for p in data_dir.glob("*") if p.is_dir() and re.fullmatch(r"\d{4}-\d{2}-\d{2}", p.name)
+    )
+    if args.all:
+        folders = dated
+    else:
+        day = args.date or datetime.now(settings.tz).strftime("%Y-%m-%d")
+        folders = [p for p in dated if p.name == day]
+        if not folders:
+            print(f"No folder for {day} in {data_dir}", file=sys.stderr)
+            if dated:
+                names = ", ".join(p.name for p in dated[-7:])
+                print(f"Folders that exist: {names}  (send one with --date)", file=sys.stderr)
+            return 1
+
+    print(
+        f"Database: {url.host or url.database}"
+        + ("  [dry run: nothing is saved]" if args.dry_run else "")
+    )
+    failed = False
+    for folder in folders:
+        result = ingest_service.send_folder(db, folder, dry_run=args.dry_run)
+        print(f"\n{folder.name}: {result.files} file(s)")
+        if not result.files:
+            print("  no .json files in this folder")
+            failed = failed or not args.all
+            continue
+        for line in result.lines:
+            print(line)
+        verb = "would be saved" if args.dry_run else "saved"
+        print(f"  => {result.saved} article(s) {verb}, {result.already_covered} already in the app")
+        if result.problems:
+            failed = True
+            print("  PROBLEMS (these were not saved):")
+            for line in result.problems:
+                print(f"    {line}")
+    return 1 if failed else 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m app.cli")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -24,6 +86,12 @@ def main(argv: list[str] | None = None) -> int:
     ingest = sub.add_parser("ingest", help="store study notes written by the analyst agent")
     ingest.add_argument("file", help="JSON file; see docs/ANALYST_AGENT.md")
     ingest.add_argument("--dry-run", action="store_true", help="validate without saving")
+    send = sub.add_parser("send", help="send the analysis agent's files to the database")
+    send.add_argument("--date", help="folder to send, YYYY-MM-DD (default: today)")
+    send.add_argument("--all", action="store_true", help="send every dated folder")
+    send.add_argument("--dry-run", action="store_true", help="check the files without saving")
+    send.add_argument("--local", action="store_true", help="allow a local SQLite database")
+    send.add_argument("--dir", help="data folder (default: <project>/agent-data)")
     recent = sub.add_parser("recent", help="list recent article titles as JSON")
     recent.add_argument("--days", type=int, default=3)
     sub.add_parser("worker", help="run the scheduler without the API")
@@ -127,6 +195,8 @@ def main(argv: list[str] | None = None) -> int:
             saved = "would be saved (dry run)" if args.dry_run else "saved"
             print(f"{len(report.added) + len(report.updated)} {saved}")
             return 0 if report.ok else 1
+        elif args.command == "send":
+            return _send(db, args)
         elif args.command == "recent":
             import json
 

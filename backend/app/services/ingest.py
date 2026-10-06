@@ -74,7 +74,13 @@ def _published_at(day: date) -> datetime:
 
 
 def load_batch(path: Path) -> AgentBatch:
-    return AgentBatch.model_validate(json.loads(path.read_text(encoding="utf-8")))
+    """Reads a data file. Accepts the full shape, a bare list of articles, or one article."""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if isinstance(data, list):
+        data = {"articles": data}
+    elif isinstance(data, dict) and "articles" not in data and "analysis" in data:
+        data = {"articles": [data]}
+    return AgentBatch.model_validate(data)
 
 
 def describe_errors(error: ValidationError) -> list[str]:
@@ -161,3 +167,51 @@ def recent_titles(db: Session, days: int = 3) -> list[dict]:
         {"title": title, "status": status, "published": local_date(published).isoformat()}
         for title, status, published in rows
     ]
+
+
+# Where the analysis agent leaves its files: <project>/agent-data/<YYYY-MM-DD>/*.json
+DATA_DIR = Path(__file__).resolve().parents[3] / "agent-data"
+SENT_MARKER = "SENT.txt"
+
+
+@dataclass
+class SendResult:
+    files: int = 0
+    saved: int = 0
+    already_covered: int = 0
+    problems: list[str] = field(default_factory=list)
+    lines: list[str] = field(default_factory=list)
+
+
+def send_folder(db: Session, folder: Path, *, dry_run: bool = False) -> SendResult:
+    """Stores every JSON file in one day's folder. A bad file does not stop the others."""
+    result = SendResult()
+    for path in sorted(folder.glob("*.json")):
+        result.files += 1
+        try:
+            batch = load_batch(path)
+        except (OSError, json.JSONDecodeError) as e:
+            result.problems.append(f"{path.name}: cannot be read as JSON ({e})")
+            continue
+        except ValidationError as e:
+            result.problems.append(f"{path.name}: does not match the format")
+            result.problems += [f"    {line}" for line in describe_errors(e)]
+            continue
+        report = ingest(db, batch, dry_run=dry_run)
+        result.saved += len(report.added) + len(report.updated)
+        result.already_covered += len(report.already_covered)
+        result.lines += [f"  new      {t}" for t in report.added]
+        result.lines += [f"  updated  {t}" for t in report.updated]
+        result.lines += [
+            f"  skipped  {t} (the app already has this story)" for t in report.already_covered
+        ]
+        result.problems += [f"{path.name}: {r}" for r in report.rejected]
+
+    if not dry_run and result.files:
+        stamp = datetime.now(get_settings().tz).strftime("%Y-%m-%d %H:%M")
+        summary = [f"Sent {stamp}: {result.saved} saved, {result.already_covered} already covered"]
+        summary += result.lines
+        if result.problems:
+            summary += ["", "Problems:"] + result.problems
+        (folder / SENT_MARKER).write_text("\n".join(summary) + "\n", encoding="utf-8")
+    return result

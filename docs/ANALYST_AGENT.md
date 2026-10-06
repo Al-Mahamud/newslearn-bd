@@ -71,18 +71,6 @@ own subscriber login.
 
 If a paper cannot be reached, continue with the other one and say so in your final report.
 
-## Before you analyse: check what the app already has
-
-From the `backend/` folder:
-
-```bash
-.venv/bin/python -m app.cli recent --days 2
-```
-
-This prints the titles already stored. Skip any story listed with status `ready`; the
-reader already has notes for it. A story listed as `pending` is waiting for an automatic
-process with a small daily quota, so do take it: yours will replace it.
-
 ## Writing the study notes
 
 Work only from what the article says. Do not add facts, figures, names or background the
@@ -122,40 +110,21 @@ For each chosen article produce these fields:
   `correct_index` counts from 0. Ask about durable facts, not wording. Give a
   one-sentence `explanation`. Write none if the article does not support a fair question.
 
-Alongside the analysis, record for each article: `source` (exactly `The Daily Star` or
-`Prothom Alo`), `title` (the printed headline; for Prothom Alo, an English translation of
-it), `published_on` (the edition date, `YYYY-MM-DD`), `page` (the print page), `url` (a
-public link to the same article on the newspaper's website if you know it, otherwise
-`null`), and `excerpt` (one or two sentences in your own words).
+Alongside the analysis, record for each article its `source`, `title`, `published_on`,
+`page`, `url` and `excerpt`. The exact shape of the file, every field's rules and a
+complete example are in [`../agent-data/FORMAT.md`](../agent-data/FORMAT.md); follow it
+precisely, because the file is checked by a program before it is stored.
 
 **Do not include the article's full text anywhere.** The database stores your notes and a
 pointer to the original, never the newspaper's own text.
 
-## Saving your work to the database
+## Handing over your work
 
-Write all of the day's articles into one JSON file shaped like
-[`agent-example.json`](agent-example.json), with `model` set to the name of the model you
-are. Save it as `backend/agent-output/YYYY-MM-DD.json`.
+Create a folder named with today's date inside `agent-data/` and save your file(s) there,
+for example `agent-data/2026-10-07/daily-star.json`.
 
-Then, from the `backend/` folder, check it and store it:
-
-```bash
-.venv/bin/python -m app.cli ingest agent-output/YYYY-MM-DD.json --dry-run
-.venv/bin/python -m app.cli ingest agent-output/YYYY-MM-DD.json
-```
-
-The first command validates without saving. If it reports format problems, each line
-names the field that is wrong; fix the file and run it again. The second command writes
-to the live database, and the articles appear in the app immediately. Running it again
-with the same file is safe: articles are updated, not duplicated.
-
-Use only this command to write to the database. Do not connect to the database yourself
-or run SQL: the command validates your output, links vocabulary to the shared dictionary,
-and handles duplicates, and a direct write would skip all of that and could corrupt data
-the app depends on.
-
-Lines beginning `already covered` are stories the app had; that is expected. Lines
-beginning `REJECTED` need fixing.
+That is where your job ends. The owner sends the folder to the database themselves by
+running `./send-news`. Do not connect to the database or run the sender yourself.
 
 ## When you finish
 

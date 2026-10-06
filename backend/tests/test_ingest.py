@@ -117,3 +117,58 @@ def test_cli_reports_format_problems_and_refuses_the_file(tmp_path, capsys, db):
 
     assert main(["recent"]) == 0
     assert json.loads(capsys.readouterr().out)[0]["status"] == "ready"
+
+
+def write(folder, name, data):
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / name).write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+
+
+def article(title):
+    return batch(title).model_dump(mode="json")["articles"][0]
+
+
+def test_send_stores_todays_folder_and_reports_bad_files(tmp_path, capsys, db):
+    today = tmp_path / str(local_today())
+    write(
+        today,
+        "a.json",
+        {"model": "gemini-3.8-pro", "articles": [article("Cabinet approves AI policy")]},
+    )
+    write(today, "b.json", [article("Reserves rise to 32 billion dollars")])  # bare list
+    write(today, "c.json", article("BTRC to relaunch handset register"))  # single article
+    write(today, "broken.json", {"articles": [{"title": "No analysis here"}]})
+    write(tmp_path / "2026-01-01", "old.json", [article("An older story entirely")])
+
+    code = main(["send", "--dir", str(tmp_path), "--local"])
+    out = capsys.readouterr().out
+    assert code == 1  # the broken file is reported, the rest are saved
+    assert "=> 3 article(s) saved" in out and "broken.json: does not match the format" in out
+    assert db.query(Article).count() == 3  # the other day's folder was not touched
+    assert "3 saved" in (today / "SENT.txt").read_text()
+
+    # Sending again is safe: articles are updated, not duplicated.
+    (today / "broken.json").unlink()
+    assert main(["send", "--dir", str(tmp_path), "--local"]) == 0
+    assert db.query(Article).count() == 3
+
+    assert main(["send", "--dir", str(tmp_path), "--local", "--all"]) == 0
+    assert db.query(Article).count() == 4
+
+
+def test_send_explains_a_missing_folder_and_a_missing_database(tmp_path, capsys):
+    write(tmp_path / "2026-01-01", "old.json", [article("An older story entirely")])
+    assert main(["send", "--dir", str(tmp_path), "--local"]) == 1
+    assert "Folders that exist: 2026-01-01" in capsys.readouterr().err
+
+    # Without --local, a SQLite database means the online one was never configured.
+    assert main(["send", "--dir", str(tmp_path)]) == 2
+    assert "DATABASE_URL=postgresql://" in capsys.readouterr().err
+
+
+def test_send_dry_run_saves_nothing(tmp_path, capsys, db):
+    today = tmp_path / str(local_today())
+    write(today, "a.json", [article("Cabinet approves AI policy")])
+    assert main(["send", "--dir", str(tmp_path), "--local", "--dry-run"]) == 0
+    assert "would be saved" in capsys.readouterr().out
+    assert db.query(Article).count() == 0 and not (today / "SENT.txt").exists()

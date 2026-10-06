@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Sends the analysis agent's files (agent-data/<date>/*.json) to the database.
+# Usage: ./send-news [--date YYYY-MM-DD] [--all] [--dry-run]
+set -euo pipefail
+cd "$(dirname "$(readlink -f "$0")")/backend"
+if [ ! -x .venv/bin/python ]; then
+  echo "backend/.venv is missing. See backend/README.md to set it up." >&2
+  exit 2
+fi
+exec .venv/bin/python -m app.cli send "$@"
