@@ -84,7 +84,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("cleanup", help="apply retention rules")
     sub.add_parser("sample", help="print the newest processed article's study notes")
     ingest = sub.add_parser("ingest", help="store study notes written by the analyst agent")
-    ingest.add_argument("file", help="JSON file; see docs/ANALYST_AGENT.md")
+    ingest.add_argument("file", help="JSON file; see agent-data/FORMAT.md")
     ingest.add_argument("--dry-run", action="store_true", help="validate without saving")
     send = sub.add_parser("send", help="send the analysis agent's files to the database")
     send.add_argument("--date", help="folder to send, YYYY-MM-DD (default: today)")
