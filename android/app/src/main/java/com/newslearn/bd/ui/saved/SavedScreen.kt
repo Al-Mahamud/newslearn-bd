@@ -32,7 +32,7 @@ import com.newslearn.bd.ui.common.UiState
 import com.newslearn.bd.ui.common.appViewModel
 import com.newslearn.bd.ui.home.ArticleFeed
 import com.newslearn.bd.ui.home.FeedViewModel
-import com.newslearn.bd.ui.learn.rememberSpeaker
+import com.newslearn.bd.ui.common.rememberSpeaker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -103,7 +103,7 @@ private fun SavedArticles(onOpenArticle: (Int) -> Unit) {
 private fun SavedWords() {
     val viewModel = appViewModel { SavedWordsViewModel(it.vocabulary) }
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val speak = rememberSpeaker()
+    val speaker = rememberSpeaker()
 
     LifecycleResumeEffect(viewModel) {
         viewModel.load()
@@ -121,7 +121,7 @@ private fun SavedWords() {
                 items(words, key = { it.word.id }) { entry ->
                     WordCard(
                         word = entry.word,
-                        onSpeak = { speak(entry.word.word) },
+                        onSpeak = { speaker.speak(entry.word.word) },
                         onToggleSave = { viewModel.remove(entry.word.id) },
                     )
                 }

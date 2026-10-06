@@ -100,6 +100,12 @@ class ArticleViewModel(
         }
     }
 
+    /** Saves every word of this article that is not saved yet. */
+    fun saveAllWords() {
+        val unsaved = (_article.value as? UiState.Success)?.data?.vocabulary.orEmpty().filterNot { it.saved }
+        unsaved.forEach(::toggleWord)
+    }
+
     private fun setWordSaved(wordId: Int, saved: Boolean) = updateArticle { article ->
         article.copy(vocabulary = article.vocabulary.map { if (it.id == wordId) it.copy(saved = saved) else it })
     }

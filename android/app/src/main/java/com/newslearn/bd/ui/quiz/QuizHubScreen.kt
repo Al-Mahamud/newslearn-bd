@@ -106,10 +106,10 @@ fun QuizHubScreen(onOpenQuiz: (Int) -> Unit) {
 
     Scaffold(snackbarHost = { SnackbarHost(snackbar) }) { padding ->
         Column(
-            Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+            Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text("Quiz", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
+            Text("Quiz", style = MaterialTheme.typography.headlineMedium)
             if (state.starting) LinearProgressIndicator(Modifier.fillMaxWidth())
 
             HubCard("Daily quiz", "10 questions from today's news", onClick = viewModel::startDaily)

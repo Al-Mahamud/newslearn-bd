@@ -25,7 +25,7 @@ Plain `http://` is only allowed for `10.0.2.2` and `localhost`; anything else mu
 ```bash
 export JAVA_HOME=~/.jdks/jdk-17 ANDROID_HOME=~/Android/Sdk
 ./gradlew assembleDebug        # app/build/outputs/apk/debug/app-debug.apk
-./gradlew testDebugUnitTest    # API contract test
+./gradlew testDebugUnitTest    # API contract test and screen tests
 ./gradlew lintDebug
 ```
 
@@ -38,7 +38,7 @@ app/src/main/java/com/newslearn/bd/
   data/local/         session storage (DataStore) and offline cache (Room)
   data/repo/          repositories; every call returns Result<T>
   ui/                 one package per screen: Composables plus their ViewModel
-app/src/test/         contract test against responses captured from the backend
+app/src/test/         contract test and screen tests, using responses captured from the backend
 ```
 
 ## Keeping the app and the API in step

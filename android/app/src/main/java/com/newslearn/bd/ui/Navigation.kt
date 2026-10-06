@@ -5,11 +5,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Quiz
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,11 +43,11 @@ import com.newslearn.bd.ui.saved.SavedScreen
 private data class Tab(val route: String, val label: String, val icon: ImageVector)
 
 private val Tabs = listOf(
-    Tab("home", "Home", Icons.Default.Home),
-    Tab("learn", "Learn", Icons.AutoMirrored.Filled.MenuBook),
+    Tab("home", "Today", Icons.Default.Home),
+    Tab("learn", "Words", Icons.AutoMirrored.Filled.MenuBook),
     Tab("quiz", "Quiz", Icons.Default.Quiz),
     Tab("saved", "Saved", Icons.Default.Bookmark),
-    Tab("profile", "Profile", Icons.Default.Person),
+    Tab("profile", "Progress", Icons.Default.BarChart),
 )
 
 @Composable
@@ -65,13 +67,18 @@ private fun MainScaffold() {
         bottomBar = {
             // The bar belongs to the five top-level screens only.
             if (Tabs.any { it.route == currentRoute }) {
-                NavigationBar {
+                NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest) {
                     Tabs.forEach { tab ->
                         NavigationBarItem(
                             selected = currentRoute == tab.route,
                             onClick = { navController.openTab(tab.route) },
                             icon = { Icon(tab.icon, contentDescription = null) },
                             label = { Text(tab.label) },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.primary,
+                                selectedTextColor = MaterialTheme.colorScheme.primary,
+                                indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                            ),
                         )
                     }
                 }
@@ -92,7 +99,7 @@ private fun MainScaffold() {
             }
             composable("quiz") { QuizHubScreen(onOpenQuiz = openQuiz) }
             composable("saved") { SavedScreen(onOpenArticle = openArticle) }
-            composable("profile") { ProfileScreen() }
+            composable("profile") { ProfileScreen(onOpenQuiz = openQuiz) }
 
             composable(
                 "article/{id}",

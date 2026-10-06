@@ -30,6 +30,7 @@ import com.newslearn.bd.data.remote.ExplainResponseDto
 import com.newslearn.bd.data.repo.LearnRepository
 import com.newslearn.bd.data.repo.VocabularyRepository
 import com.newslearn.bd.data.repo.userMessage
+import com.newslearn.bd.ui.common.ContentCard
 import com.newslearn.bd.ui.common.UiState
 import com.newslearn.bd.ui.common.appViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -79,10 +80,10 @@ fun LearnScreen(onReview: () -> Unit, onDigest: (String) -> Unit) {
     }
 
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text("Learn", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
+        Text("Words and revision", style = MaterialTheme.typography.headlineMedium)
 
         HubCard(
             title = "Review your words",
@@ -126,9 +127,9 @@ fun LearnScreen(onReview: () -> Unit, onDigest: (String) -> Unit) {
 
 @Composable
 fun HubCard(title: String, subtitle: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    Card(modifier.fillMaxWidth().clickable(onClick = onClick)) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+    ContentCard(modifier.fillMaxWidth(), onClick = onClick) {
+        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(title, style = MaterialTheme.typography.titleMedium)
             Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }

@@ -28,8 +28,8 @@ android {
         applicationId = "com.newslearn.bd"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.2.0"
         buildConfigField("String", "API_BASE_URL", "\"${apiBaseUrl.trimEnd('/')}/\"")
     }
 
@@ -53,6 +53,10 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+    testOptions {
+        // The screen tests run on the JVM (Robolectric) and need the app's fonts and themes.
+        unitTests.isIncludeAndroidResources = true
     }
 }
 
@@ -86,6 +90,11 @@ dependencies {
     implementation(libs.okhttp.logging)
     implementation(libs.coil.compose)
 
+    debugImplementation(libs.compose.ui.test.manifest)
+
     testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(platform(libs.compose.bom))
+    testImplementation(libs.compose.ui.test.junit4)
     testImplementation(libs.kotlinx.coroutines.test)
 }

@@ -85,12 +85,37 @@ The API address is a build setting. The default, `http://10.0.2.2:8000/`, reache
 running on the same computer as the Android emulator. For a phone or a deployed server set
 `newslearn.apiBaseUrl=https://…/` in `android/local.properties`.
 
+## Redesign (version 0.2.0)
+
+The look and the five main screens were rebuilt from the design canvas: deep green with an
+amber accent, Bricolage Grotesque for headlines, Hind Siliguri for body text (one face for
+Bangla and English).
+
+- **Today**: a summary panel (articles read against a fixed goal of 5, words due, quiz
+  done), then the day's top picks ranked by exam score with the reason each was chosen;
+  topic tabs including ICT.
+- **Article**: vocabulary highlighted inside the text and tappable, a word panel, a
+  listening player with slow speed and progress, text-size control, a two-column word grid.
+- **Word review**: a full-screen flashcard showing each word's stage and when it returns.
+- **Quiz**: one question per screen with a progress strip and timer; answers and
+  explanations after finishing.
+- **Progress**: the week's streak, totals, accuracy by topic, and practice on the weakest.
+
+Step 2, which needs backend changes first: adjustable daily goals, feedback straight after
+each quiz answer, "seen in N articles" and similar words, a "Hard" review answer, and
+"I know it" for words.
+
+`ScreensTest` draws each of these screens on the JVM with responses captured from the real
+backend and walks its main path (open a pick, tap a word and save it, review a word,
+finish a quiz).
+
 ## Not yet verified
 
-- **The app has never been run.** The development machine has no hardware virtualisation,
-  so no emulator could be started. Everything is compiled and the API models are tested
-  against real responses, but no screen has been seen or tapped. Expect layout and
-  behaviour fixes on the first real run; walk through each screen once before relying on it.
+- **The app has never been seen on a screen.** The development machine has no hardware
+  virtualisation, so no emulator could be started. The screens are compiled and exercised
+  by JVM tests with real data, which shows they draw and respond without crashing, but
+  nobody has looked at them: spacing, text wrapping, colours and Bangla rendering are
+  unchecked. Expect visual fixes on the first real run.
 - **Token refresh, offline fallback and the quiz timer** are the logic most worth
   exercising by hand: leave the app open past 30 minutes, switch on airplane mode on the
   feed and on an opened article, and let a mock exam run out.
