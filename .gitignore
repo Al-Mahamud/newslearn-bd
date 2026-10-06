@@ -20,3 +20,6 @@ android/.kotlin/
 *.aab
 *.jks
 *.keystore
+
+# Analyst agent's daily files
+backend/agent-output/

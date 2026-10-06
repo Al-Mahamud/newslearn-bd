@@ -21,6 +21,11 @@ def main(argv: list[str] | None = None) -> int:
     process.add_argument("--limit", type=int, default=None)
     sub.add_parser("cleanup", help="apply retention rules")
     sub.add_parser("sample", help="print the newest processed article's study notes")
+    ingest = sub.add_parser("ingest", help="store study notes written by the analyst agent")
+    ingest.add_argument("file", help="JSON file; see docs/ANALYST_AGENT.md")
+    ingest.add_argument("--dry-run", action="store_true", help="validate without saving")
+    recent = sub.add_parser("recent", help="list recent article titles as JSON")
+    recent.add_argument("--days", type=int, default=3)
     sub.add_parser("worker", help="run the scheduler without the API")
     admin = sub.add_parser("create-admin", help="create an admin account, or promote one")
     admin.add_argument("email")
@@ -92,6 +97,46 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"  {q.text}")
                 for i, option in enumerate(q.options):
                     print(f"    {'*' if i == q.correct_index else ' '} {option}")
+        elif args.command == "ingest":
+            import json
+            from pathlib import Path
+
+            from pydantic import ValidationError
+
+            from app.services import ingest as ingest_service
+
+            try:
+                batch = ingest_service.load_batch(Path(args.file))
+            except (OSError, json.JSONDecodeError) as e:
+                print(f"cannot read {args.file}: {e}", file=sys.stderr)
+                return 1
+            except ValidationError as e:
+                print("the file does not match the expected format:", file=sys.stderr)
+                for line in ingest_service.describe_errors(e):
+                    print(f"  {line}", file=sys.stderr)
+                return 1
+            report = ingest_service.ingest(db, batch, dry_run=args.dry_run)
+            for label, titles in (
+                ("added", report.added),
+                ("updated", report.updated),
+                ("already covered, not stored", report.already_covered),
+                ("REJECTED", report.rejected),
+            ):
+                for title in titles:
+                    print(f"{label}: {title}")
+            saved = "would be saved (dry run)" if args.dry_run else "saved"
+            print(f"{len(report.added) + len(report.updated)} {saved}")
+            return 0 if report.ok else 1
+        elif args.command == "recent":
+            import json
+
+            from app.services import ingest as ingest_service
+
+            print(
+                json.dumps(
+                    ingest_service.recent_titles(db, args.days), ensure_ascii=False, indent=1
+                )
+            )
         elif args.command == "cleanup":
             from app.services import maintenance
 

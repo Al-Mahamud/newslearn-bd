@@ -83,6 +83,21 @@ migrations/        Alembic
 tests/
 ```
 
+## Analyst agent
+
+An AI agent on your own computer can read the day's papers, choose what matters for your
+exams, and store its study notes here. Its brief is [`../docs/ANALYST_AGENT.md`](../docs/ANALYST_AGENT.md).
+It writes through one validated command:
+
+```bash
+python -m app.cli recent --days 2                  # what the app already has
+python -m app.cli ingest agent-output/2026-10-07.json --dry-run
+python -m app.cli ingest agent-output/2026-10-07.json
+```
+
+To make that write to the hosted database, put its address in `backend/.env`:
+`DATABASE_URL=postgresql://...` (the same Neon string used on GitHub and Render).
+
 ## Sources and copyright
 
 News is found through RSS feeds published by the outlets. The app stores a headline, a

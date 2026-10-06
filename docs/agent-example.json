@@ -1,0 +1,63 @@
+{
+  "model": "gemini-3.8-pro",
+  "articles": [
+    {
+      "source": "The Daily Star",
+      "title": "Cabinet approves national AI policy",
+      "published_on": "2026-10-07",
+      "url": null,
+      "page": "1",
+      "image_url": null,
+      "excerpt": "The cabinet has approved the country's first national policy on artificial intelligence.",
+      "analysis": {
+        "category": "science_technology",
+        "summary": "The cabinet has approved Bangladesh's first national artificial intelligence policy, which sets rules for how government offices may use AI. The ICT Division drafted the policy and will oversee it. Officials say it is meant to improve public services while protecting citizens' data.",
+        "easy_summary": "The government has made its first set of rules for using AI. The ICT Division wrote the rules and will check that offices follow them. The aim is better government services and safe personal data.",
+        "bangla_summary": "মন্ত্রিসভা দেশের প্রথম জাতীয় কৃত্রিম বুদ্ধিমত্তা নীতিমালা অনুমোদন করেছে। সরকারি দপ্তরে এআই ব্যবহারের নিয়ম এতে নির্ধারণ করা হয়েছে। আইসিটি বিভাগ নীতিমালাটি প্রণয়ন করেছে এবং বাস্তবায়ন তদারক করবে।",
+        "vocabulary": [
+          {
+            "word": "oversee",
+            "part_of_speech": "verb",
+            "meaning_en": "to watch a piece of work and make sure it is done correctly",
+            "meaning_bn": "তদারক করা",
+            "example_sentence": "A senior engineer will oversee the new project.",
+            "context_sentence": "The ICT Division drafted the policy and will oversee it.",
+            "difficulty": "medium"
+          },
+          {
+            "word": "framework",
+            "part_of_speech": "noun",
+            "meaning_en": "a set of rules or ideas used to plan or decide something",
+            "meaning_bn": "কাঠামো",
+            "example_sentence": "The school follows a national framework for teaching science.",
+            "context_sentence": "The policy sets a framework for public-sector AI.",
+            "difficulty": "medium"
+          },
+          {
+            "word": "safeguard",
+            "part_of_speech": "verb",
+            "meaning_en": "to protect something from harm",
+            "meaning_bn": "সুরক্ষিত রাখা",
+            "example_sentence": "Strong passwords safeguard your accounts.",
+            "context_sentence": "It is meant to safeguard citizens' data.",
+            "difficulty": "hard"
+          }
+        ],
+        "facts": [
+          {"kind": "fact", "text": "First national AI policy of Bangladesh", "detail": "Approved by the cabinet"},
+          {"kind": "organization", "text": "ICT Division", "detail": "Drafted the policy and will oversee it"}
+        ],
+        "exam_importance": 92,
+        "exam_reason": "A first-of-its-kind national ICT policy is a likely question for ICT posts and BCS general knowledge.",
+        "questions": [
+          {
+            "question": "Which body drafted Bangladesh's first national AI policy?",
+            "options": ["ICT Division", "BTRC", "Bangladesh Computer Council", "Planning Commission"],
+            "correct_index": 0,
+            "explanation": "The article states that the ICT Division drafted the policy and will oversee it."
+          }
+        ]
+      }
+    }
+  ]
+}
