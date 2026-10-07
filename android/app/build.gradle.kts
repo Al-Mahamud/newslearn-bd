@@ -57,6 +57,15 @@ android {
     testOptions {
         // The screen tests run on the JVM (Robolectric) and need the app's fonts and themes.
         unitTests.isIncludeAndroidResources = true
+        unitTests.all {
+            // Lets the screenshot test read real pixels from the rendered screens.
+            it.systemProperty("robolectric.pixelCopyRenderMode", "hardware")
+            // Set SCREENSHOT_DIR to make ScreenshotTest write PNGs there; otherwise it is skipped.
+            System.getenv("SCREENSHOT_DIR")?.let { dir ->
+                it.environment("SCREENSHOT_DIR", dir)
+                it.systemProperty("roborazzi.test.record", "true")
+            }
+        }
     }
 }
 
@@ -94,6 +103,8 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
+    testImplementation(libs.roborazzi)
+    testImplementation(libs.roborazzi.compose)
     testImplementation(platform(libs.compose.bom))
     testImplementation(libs.compose.ui.test.junit4)
     testImplementation(libs.kotlinx.coroutines.test)

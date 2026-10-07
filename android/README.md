@@ -41,6 +41,17 @@ app/src/main/java/com/newslearn/bd/
 app/src/test/         contract test and screen tests, using responses captured from the backend
 ```
 
+## Screen images
+
+The images in the main README are drawn from the app's real screens by `ScreenshotTest`,
+with sample content from `DemoApi`. To redraw them after changing a screen:
+
+```bash
+SCREENSHOT_DIR="$(cd ../docs/images && pwd)" ./gradlew testDebugUnitTest --tests "*ScreenshotTest"
+```
+
+Without `SCREENSHOT_DIR` that test is skipped.
+
 ## Keeping the app and the API in step
 
 `ApiContractTest` decodes real responses stored in `app/src/test/resources/fixtures`.

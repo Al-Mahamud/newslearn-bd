@@ -29,7 +29,7 @@ import com.newslearn.bd.data.remote.UserWordDto
  * Stands in for the server in screen tests. Every answer is a response captured from the
  * real backend (src/test/resources/fixtures), so screens are exercised with real shapes.
  */
-class FakeApi : ApiService {
+open class FakeApi : ApiService {
     val savedWords = mutableListOf<Int>()
     val knownWords = mutableListOf<Int>()
     val reviews = mutableListOf<Pair<Int, String>>()
